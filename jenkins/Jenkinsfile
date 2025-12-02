@@ -100,7 +100,7 @@ pipeline {
                             -e QUARKUS_MONGODB_CREDENTIALS_USERNAME='${MONGO_USER}' \\
                             -e QUARKUS_MONGODB_CREDENTIALS_PASSWORD='${MONGO_PASSWORD}' \\
                             -e QUARKUS_MONGODB_CREDENTIALS_AUTH_SOURCE='admin' \\
-                            -e QUARKUS_MONGODB_HOSTS='mongo-db-prod:27017' \\
+                            -e QUARKUS_MONGODB_HOSTS='${MONGO_HOST}' \\
                             -e QUARKUS_MONGODB_DATABASE='ontologies' \\
                             --name ${CONTAINER_NAME} \\
                             -p 8003:8080 \\
