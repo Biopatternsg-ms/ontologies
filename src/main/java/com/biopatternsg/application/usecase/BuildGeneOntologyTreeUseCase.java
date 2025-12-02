@@ -69,5 +69,3 @@ public class BuildGeneOntologyTreeUseCase implements BuildGeneOntologyTree {
     }
 }
 
-//TODO: Agregar jenkinsfile
-

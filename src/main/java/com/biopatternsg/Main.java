@@ -11,5 +11,3 @@ public class Main {
     }
 }
 
-//TODO: instalar container de mongo 8
-

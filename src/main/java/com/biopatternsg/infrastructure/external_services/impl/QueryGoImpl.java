@@ -6,7 +6,6 @@ import com.biopatternsg.infrastructure.external_services.QueryGO;
 import com.biopatternsg.infrastructure.external_services.dto.go.GoTermResponse;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 @ApplicationScoped
