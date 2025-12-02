@@ -103,7 +103,7 @@ pipeline {
                             -e QUARKUS_MONGODB_HOSTS='mongo-db-prod:27017' \\
                             -e QUARKUS_MONGODB_DATABASE='ontologies' \\
                             --name ${CONTAINER_NAME} \\
-                            -p 8001:8080 \\
+                            -p 8002:8080 \\
                             --network general-network \\
                             --restart always \\
                             ${imageName}
