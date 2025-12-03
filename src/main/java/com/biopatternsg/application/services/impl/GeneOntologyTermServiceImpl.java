@@ -8,22 +8,19 @@ import com.biopatternsg.domain.port.out.repositories.GeneOntologyTermRepository;
 import com.biopatternsg.infrastructure.external_services.dto.go.GoTermResponse;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
 @Slf4j
+@RequiredArgsConstructor
 @ApplicationScoped
 public class GeneOntologyTermServiceImpl implements GeneOntologyTermService {
 
-    @Inject
-    GeneOntologyTermRepoWeb goOntologyRepoWeb;
-
-    @Inject
-    GeneOntologyTermRepository goTermRepository;
-
-    @Inject
-    GoTermMapper goTermMapper;
+    private final GeneOntologyTermRepoWeb goOntologyRepoWeb;
+    private final GeneOntologyTermRepository goTermRepository;
+    private final GoTermMapper goTermMapper;
 
     @Override
     public PathsToRoot getPathsToRoot(String goId) {

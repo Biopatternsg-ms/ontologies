@@ -103,13 +103,14 @@ pipeline {
                             -e QUARKUS_MONGODB_HOSTS='${MONGO_HOST}' \\
                             -e QUARKUS_MONGODB_DATABASE='${ONTOLOGIES_DATABASE}' \\
                             --name ${CONTAINER_NAME} \\
-                            -p 8003:8080 \\
-                            --network general-network \\
+                            -p ${ONTOLOGIES_PORT}:8080 \\
+                            --network ${NETWORK} \\
                             --restart always \\
                             ${imageName}
 
                         """
                         echo "--- Deployment completed! ---"
+//                         TODO: Mover los demas valores a environment variables
                     }
                 }
             }

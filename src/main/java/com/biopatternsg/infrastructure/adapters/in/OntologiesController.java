@@ -21,8 +21,7 @@ import java.util.concurrent.Executor;
 public class OntologiesController {
 
     private final BuildGeneOntologyTree buildGeneOntologyTree;
-    @Inject
-    Executor executor;
+    private final Executor executor;
 
     @POST
     @Path("/build-tree")
