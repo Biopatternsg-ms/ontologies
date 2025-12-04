@@ -7,7 +7,6 @@ import com.biopatternsg.domain.port.out.external_repositories.GeneOntologyTermRe
 import com.biopatternsg.domain.port.out.repositories.GeneOntologyTermRepository;
 import com.biopatternsg.infrastructure.external_services.dto.go.GoTermResponse;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,14 +27,14 @@ public class GeneOntologyTermServiceImpl implements GeneOntologyTermService {
     }
 
     @Override
-    public List<GoTermDTO> getByIdsInWeb(List<String> ids) {
+    public List<GoTerm> getByIdsInWeb(List<String> ids) {
         GoTermResponse response = goOntologyRepoWeb.findGOTerms(ids);
         return goTermMapper.toEntity(response);
     }
 
     @Override
-    public List<GoTermDTO> getByIdsInDB(List<String> ids) {
-        return goTermRepository.findByIds(ids).stream().map(goTermMapper::toDTO).toList();
+    public List<GoTerm> getByIdsInDB(List<String> ids) {
+        return goTermRepository.findByIds(ids).stream().map(goTermMapper::toModel).toList();
     }
 
 }

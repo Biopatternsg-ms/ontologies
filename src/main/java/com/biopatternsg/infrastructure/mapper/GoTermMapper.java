@@ -1,7 +1,7 @@
 package com.biopatternsg.infrastructure.mapper;
 
 import com.biopatternsg.infrastructure.mongo.GoTermCollection;
-import com.biopatternsg.domain.model.GoTermDTO;
+import com.biopatternsg.domain.model.GoTerm;
 import com.biopatternsg.infrastructure.external_services.dto.go.GoTermResponse;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class GoTermMapper {
 
-    public List<GoTermDTO> toEntity(GoTermResponse response) {
+    public List<GoTerm> toEntity(GoTermResponse response) {
         if (response == null || response.results() == null) {
             return List.of();
         }
@@ -21,92 +21,92 @@ public class GoTermMapper {
                 .collect(Collectors.toList());
     }
 
-    public GoTermDTO toDTO(GoTermCollection entity) {
+    public GoTerm toModel(GoTermCollection entity) {
         if (entity == null) {
             return null;
         }
 
-        return GoTermDTO.builder()
+        return GoTerm.builder()
                 .id(entity.id != null ? entity.id.toString() : null)
                 .termId(entity.getTermId())
                 .name(entity.getName())
-                .synonyms(mapSynonymsToDTO(entity.getSynonyms()))
-                .parentRelations(mapParentRelationsToDTO(entity.getParentRelations()))
+                .synonyms(mapSynonymsToModel(entity.getSynonyms()))
+                .parentRelations(mapParentRelationsToModel(entity.getParentRelations()))
                 .build();
     }
 
-    public GoTermCollection toEntity(GoTermDTO dto) {
-        if (dto == null) {
+    public GoTermCollection toEntity(GoTerm term) {
+        if (term == null) {
             return null;
         }
 
         var entity = new GoTermCollection();
-        entity.setTermId(dto.getTermId());
-        entity.setName(dto.getName());
-        entity.setSynonyms(mapDTOToSynonyms(dto.getSynonyms()));
-        entity.setParentRelations(mapDTOToParentRelations(dto.getParentRelations()));
+        entity.setTermId(term.getTermId());
+        entity.setName(term.getName());
+        entity.setSynonyms(mapModelToSynonyms(term.getSynonyms()));
+        entity.setParentRelations(mapModelToParentRelations(term.getParentRelations()));
 
         return entity;
     }
 
-    private List<GoTermDTO.SynonymDTO> mapSynonymsToDTO(List<GoTermCollection.Synonym> synonyms) {
+    private List<GoTerm.Synonym> mapSynonymsToModel(List<GoTermCollection.Synonym> synonyms) {
         if (synonyms == null) {
             return null;
         }
         return synonyms.stream()
-                .map(syn -> GoTermDTO.SynonymDTO.builder()
+                .map(syn -> GoTerm.Synonym.builder()
                         .name(syn.getName())
                         .type(syn.getType())
                         .build())
                 .collect(Collectors.toList());
     }
 
-    private List<GoTermCollection.Synonym> mapDTOToSynonyms(List<GoTermDTO.SynonymDTO> synonymDTOs) {
-        if (synonymDTOs == null) {
+    private List<GoTermCollection.Synonym> mapModelToSynonyms(List<GoTerm.Synonym> synonyms) {
+        if (synonyms == null) {
             return null;
         }
-        return synonymDTOs.stream()
-                .map(dto -> {
+        return synonyms.stream()
+                .map(syn -> {
                     var synonym = new GoTermCollection.Synonym();
-                    synonym.setName(dto.getName());
-                    synonym.setType(dto.getType());
+                    synonym.setName(syn.getName());
+                    synonym.setType(syn.getType());
                     return synonym;
                 })
                 .collect(Collectors.toList());
     }
 
-    private List<GoTermDTO.ParentRelationDTO> mapParentRelationsToDTO(List<GoTermCollection.ParentRelation> parentRelations) {
+    private List<GoTerm.ParentRelation> mapParentRelationsToModel(List<GoTermCollection.ParentRelation> parentRelations) {
         if (parentRelations == null) {
             return null;
         }
         return parentRelations.stream()
-                .map(rel -> GoTermDTO.ParentRelationDTO.builder()
+                .map(rel -> GoTerm.ParentRelation.builder()
                         .parent(rel.getParent())
                         .relationship(rel.getRelationship())
                         .build())
                 .collect(Collectors.toList());
     }
 
-    private List<GoTermCollection.ParentRelation> mapDTOToParentRelations(List<GoTermDTO.ParentRelationDTO> relationDTOs) {
-        if (relationDTOs == null) {
+    private List<GoTermCollection.ParentRelation> mapModelToParentRelations(List<GoTerm.ParentRelation> relations) {
+        if (relations == null) {
             return null;
         }
-        return relationDTOs.stream()
-                .map(dto -> {
+        return relations.stream()
+                .map(rel -> {
                     var relation = new GoTermCollection.ParentRelation();
-                    relation.setParent(dto.getParent());
-                    relation.setRelationship(dto.getRelationship());
+                    relation.setParent(rel.getParent());
+                    relation.setRelationship(rel.getRelationship());
                     return relation;
                 })
                 .collect(Collectors.toList());
     }
 
-    private GoTermDTO mapGoTermToEntity(GoTermResponse.GoTerm goTerm) {
+    private GoTerm mapGoTermToEntity(GoTermResponse.GoTerm goTerm) {
         if (goTerm == null) {
             return null;
         }
 
-        var entity = new GoTermDTO();
+        var entity = new GoTerm();
         entity.setTermId(goTerm.id());
         entity.setName(goTerm.name());
 
@@ -114,7 +114,7 @@ public class GoTermMapper {
             entity.setSynonyms(
                 goTerm.synonyms().stream()
                     .map(syn -> {
-                        var synEntity = new GoTermDTO.SynonymDTO();
+                        var synEntity = new GoTerm.Synonym();
                         synEntity.setName(syn.name());
                         synEntity.setType(syn.type());
                         return synEntity;

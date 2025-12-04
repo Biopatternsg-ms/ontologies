@@ -11,18 +11,18 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GoTermDTO {
+public class GoTerm {
     private String id;
     private String termId;
     private String name;
-    private List<SynonymDTO> synonyms;
-    private List<ParentRelationDTO> parentRelations;
+    private List<Synonym> synonyms;
+    private List<ParentRelation> parentRelations;
 
     @Data
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class SynonymDTO {
+    public static class Synonym {
         private String name;
         private String type;
     }
@@ -31,7 +31,7 @@ public class GoTermDTO {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class ParentRelationDTO {
+    public static class ParentRelation {
         private String parent;
         private String relationship;
     }

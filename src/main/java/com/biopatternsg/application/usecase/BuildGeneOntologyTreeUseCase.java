@@ -36,10 +36,10 @@ public class BuildGeneOntologyTreeUseCase implements BuildGeneOntologyTree {
             return;
         }
 
-        List<GoTermDTO> newGoTerms = geneOntologyTermService.getByIdsInWeb(newGOTermIds);
+        List<GoTerm> newGoTerms = geneOntologyTermService.getByIdsInWeb(newGOTermIds);
 
         newGoTerms.forEach(goTerm -> {
-            List<GoTermDTO.ParentRelationDTO> parentRelations = getParentRelations(goTerm.getTermId());
+            List<GoTerm.ParentRelation> parentRelations = getParentRelations(goTerm.getTermId());
             goTerm.setParentRelations(parentRelations);
             goTermRepository.save(goTermMapper.toEntity(goTerm));
         });
@@ -47,7 +47,7 @@ public class BuildGeneOntologyTreeUseCase implements BuildGeneOntologyTree {
         log.info("End Building gene ontology tree");
     }
 
-    private List<GoTermDTO.ParentRelationDTO> getParentRelations(String newGoTermId) {
+    private List<GoTerm.ParentRelation> getParentRelations(String newGoTermId) {
         List<List<PathToRoot>> newGoTermPathsToRoots = geneOntologyTermService.getPathsToRoot(newGoTermId).getResults();
 
         Set<PathToRoot> flatNewGoTermPathsToRoots = newGoTermPathsToRoots.stream()
@@ -56,14 +56,14 @@ public class BuildGeneOntologyTreeUseCase implements BuildGeneOntologyTree {
                 .collect(Collectors.toSet());
 
         return flatNewGoTermPathsToRoots.stream()
-                .map(a -> new GoTermDTO.ParentRelationDTO(a.getParent(), a.getRelationship()))
+                .map(a -> new GoTerm.ParentRelation(a.getParent(), a.getRelationship()))
                 .toList();
     }
 
     private List<String> getNewGOTermIds(GeneOntologyBuildTreeRequest geneOntology) {
         List<String> goIdsOfRequest = geneOntology.getGoTermIds();
-        List<GoTermDTO> goTermEntities = geneOntologyTermService.getByIdsInDB(goIdsOfRequest);
-        List<String> termIdsInDB = goTermEntities.stream().map(GoTermDTO::getTermId).toList();
+        List<GoTerm> goTermEntities = geneOntologyTermService.getByIdsInDB(goIdsOfRequest);
+        List<String> termIdsInDB = goTermEntities.stream().map(GoTerm::getTermId).toList();
 
         return goIdsOfRequest.stream().filter(id -> !termIdsInDB.contains(id)).toList();
     }
