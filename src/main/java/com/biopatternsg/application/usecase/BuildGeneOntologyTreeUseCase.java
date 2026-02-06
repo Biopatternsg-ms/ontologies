@@ -1,8 +1,10 @@
 package com.biopatternsg.application.usecase;
 
 import com.biopatternsg.application.services.GeneOntologyTermService;
+import com.biopatternsg.domain.model.GeneOntologyBuildTreeRequest;
+import com.biopatternsg.domain.model.GoTerm;
+import com.biopatternsg.domain.model.PathToRoot;
 import com.biopatternsg.infrastructure.mapper.GoTermMapper;
-import com.biopatternsg.domain.model.*;
 import com.biopatternsg.domain.port.in.BuildGeneOntologyTree;
 import com.biopatternsg.domain.port.out.repositories.GeneOntologyTermRepository;
 import jakarta.enterprise.context.ApplicationScoped;
