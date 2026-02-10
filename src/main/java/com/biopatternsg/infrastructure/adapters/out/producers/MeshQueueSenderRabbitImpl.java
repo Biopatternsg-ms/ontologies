@@ -1,5 +1,6 @@
 package com.biopatternsg.infrastructure.adapters.out.producers;
 
+import com.biopatternsg.domain.model.mesh.BiologicalObject;
 import com.biopatternsg.domain.port.out.producers.MeshQueueSender;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -15,11 +16,11 @@ public class MeshQueueSenderRabbitImpl implements MeshQueueSender {
 
     @Inject
     @Channel("ncbi-out")
-    Emitter<String> emitter;
+    Emitter<BiologicalObject> emitter;
 
     @Override
-    public void senderMeshId(String meshId) {
-        emitter.send(meshId);
-        log.info("Message sent to queue-ncbi: {}", meshId);
+    public void senderBiologicalObject(BiologicalObject biologicalObject) {
+        emitter.send(biologicalObject);
+        log.info("Message sent to queue-ncbi: {}", biologicalObject.getName());
     }
 }

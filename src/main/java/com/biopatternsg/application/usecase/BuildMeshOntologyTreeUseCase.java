@@ -5,7 +5,6 @@ import com.biopatternsg.domain.model.mesh.BiologicalObject;
 import com.biopatternsg.domain.model.mesh.MeshInfo;
 import com.biopatternsg.domain.port.in.BuildMeshOntologyTree;
 import com.biopatternsg.domain.port.out.repositories.MeshOntologyRepository;
-import com.biopatternsg.infrastructure.adapters.out.producers.MeshQueueSenderRabbitImpl;
 import com.biopatternsg.infrastructure.external_services.dto.mesh.SummaryMesh;
 import com.biopatternsg.infrastructure.mongo.MeshTermCollection;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -22,43 +21,61 @@ public class BuildMeshOntologyTreeUseCase implements BuildMeshOntologyTree {
 
     private final MeshOntologyService meshOntologyService;
     private final MeshOntologyRepository meshOntologyRepository;
-    private final MeshQueueSenderRabbitImpl meshRabbitSender;
 
     @Override
     public void execute(BiologicalObject biologicalObject) {
-
-        if (isSavedName(biologicalObject.getName()) || isSavedSynonyms(biologicalObject.getSynonyms())) {
-            log.info("Mesh tree for {} already exists", biologicalObject.getName());
-            return;
-        }
-
         log.info("Start building tree mesh: {}", biologicalObject.getName());
 
         List<String> meshTermIds = meshOntologyService.getMeshTermIds(biologicalObject.getName());
         List<String> biologicalObjectsSynonyms = biologicalObject.getSynonyms();
-
+        Stack<String> termIdsStack = new Stack<>();
 
         Optional<MeshInfo> matchTermIdOptional = findFirstMatchTerm(meshTermIds, biologicalObjectsSynonyms, biologicalObject.getName());
 
-
-        if (matchTermIdOptional.isPresent()) {
-            MeshInfo matchTermId = matchTermIdOptional.get();
-            saveMechTerm(matchTermId, biologicalObject);
-
-            matchTermId.getParents().forEach(meshRabbitSender::senderMeshId);
+        if (matchTermIdOptional.isEmpty()) {
+            log.info("No match term found for {}", biologicalObject.getName());
+            return;
         }
-    }
 
-    private boolean isSavedSynonyms(List<String> synonyms) {
-        Optional<MeshTermCollection> byName = meshOntologyRepository.findBySynonyms(synonyms);
-        return byName.isPresent();
+
+        MeshInfo matchTermId = matchTermIdOptional.get();
+        saveMechTerm(matchTermId, biologicalObject);
+        matchTermId.getParents().forEach(termIdsStack::push);
+
+        while (!termIdsStack.isEmpty()) {
+            String currentTermId = termIdsStack.pop();
+
+            if (isSavedTerm(currentTermId)) {
+                log.info("Term {} already exists", currentTermId);
+                continue;
+            }
+
+            SummaryMesh currentSummaryMesh = meshOntologyService.getSummarySynonyms(currentTermId);
+            List<String> currentTermParents = currentSummaryMesh.getParents().stream().toList();
+
+            List<String> currentSynonyms = currentSummaryMesh.getMeshSynonyms().stream().toList();
+
+            MeshInfo nuevo = MeshInfo.builder()
+                    .meshId(currentTermId)
+                    .name(currentSynonyms.getFirst())
+                    .parents(currentTermParents)
+                    .synonyms(currentSynonyms.subList(1, currentSynonyms.size()))
+                    .build();
+
+            saveMechTerm(nuevo, new BiologicalObject());
+            log.info("Term {} saved", currentTermId);
+
+            currentTermParents.forEach(termIdsStack::push);
+        }
+
+
+        log.info("End building tree mesh: {}", biologicalObject.getName());
     }
 
     private void saveMechTerm(MeshInfo matchTermId, BiologicalObject biologicalObject) {
         MeshTermCollection collection = new MeshTermCollection();
         collection.setMeshId(matchTermId.getMeshId());
         collection.setName(matchTermId.getName());
-        collection.setSymbol(biologicalObject.getSymbol());
         collection.setSynonyms(matchTermId.getSynonyms());
         collection.setParents(matchTermId.getParents());
 
@@ -77,14 +94,14 @@ public class BuildMeshOntologyTreeUseCase implements BuildMeshOntologyTree {
             if (containSynonym){
                 List<String> synonyms = summary.getMeshSynonyms().stream().toList();
 
-               return Optional.of(
-                       MeshInfo.builder()
-                               .meshId(termId)
-                               .name(name)
-                               .synonyms(synonyms)
-                               .parents(summary.getParents().stream().toList())
-                               .build()
-               );
+                return Optional.of(
+                        MeshInfo.builder()
+                                .meshId(termId)
+                                .name(name)
+                                .synonyms(synonyms)
+                                .parents(summary.getParents().stream().toList())
+                                .build()
+                );
             }
         }
 
@@ -110,4 +127,10 @@ public class BuildMeshOntologyTreeUseCase implements BuildMeshOntologyTree {
                 .map(it -> it.toLowerCase().replaceAll("[\\s\\-_]+", ""))
                 .anyMatch(lowerCaseBOSynonyms::contains);
     }
+
+    boolean isSavedTerm(String term) {
+        Optional<MeshTermCollection> byName = meshOntologyRepository.findByMeshId(term);
+        return byName.isPresent();
+    }
+
 }

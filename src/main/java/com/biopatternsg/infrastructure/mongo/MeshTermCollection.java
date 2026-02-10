@@ -13,7 +13,6 @@ import java.util.List;
 public class MeshTermCollection extends PanacheMongoEntity {
     private String meshId;
     private String name;
-    private String symbol;
     private List<String> synonyms;
     private List<String> parents;
 }

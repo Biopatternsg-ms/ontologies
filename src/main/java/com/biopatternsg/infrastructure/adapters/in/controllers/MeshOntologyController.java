@@ -1,7 +1,7 @@
 package com.biopatternsg.infrastructure.adapters.in.controllers;
 
 import com.biopatternsg.domain.model.mesh.BiologicalObject;
-import com.biopatternsg.domain.port.in.BuildMeshOntologyTree;
+import com.biopatternsg.domain.port.in.SendBiologicalObjectToQueue;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.POST;
@@ -19,16 +19,16 @@ import java.util.concurrent.Executor;
 @Path("/mesh-ontology")
 public class MeshOntologyController {
 
-    private final BuildMeshOntologyTree buildMeshOntologyTree;
+    private final SendBiologicalObjectToQueue sendBiologicalObjectToQueue;
     private final Executor executor;
 
     @POST
     @Path("/mesh")
-    public Response buildTreeGO(@Valid BiologicalObject biologicalObjects) {
+    public Response buildTreeMesh(@Valid BiologicalObject biologicalObjects) {
 
         CompletableFuture.runAsync(() -> {
             try {
-                buildMeshOntologyTree.execute(biologicalObjects);
+                sendBiologicalObjectToQueue.execute(biologicalObjects);
             } catch (Exception e) {
                 log.error("Error building mesh ontology tree", e);
             }
