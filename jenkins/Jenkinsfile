@@ -104,7 +104,7 @@ pipeline {
                         docker run -d \\
                             -e DB_USER='${MONGO_USER}' \\
                             -e DB_PASSWORD='${MONGO_PASSWORD}' \\
-                            -e MONGO_DB_URL='${MONGO_HOST}' \\
+                            -e DB_URL='${MONGO_DB_URL}' \\
                             -e DB_NAME='${ONTOLOGIES_DATABASE}' \\
                             -e RABBIT_HOST='${RABBIT_HOST}' \\
                             -e RABBIT_USER='${RABBIT_USER}' \\
