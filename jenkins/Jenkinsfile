@@ -83,7 +83,12 @@ pipeline {
                         credentialsId: '06a41492-8765-49c4-91f6-b759260140f0',
                         usernameVariable: 'MONGO_USER',
                         passwordVariable: 'MONGO_PASSWORD'
-                    )
+                    ),
+                    usernamePassword(
+                        credentialsId: 'rabbit-credentials',
+                        usernameVariable: 'RABBIT_USER',
+                        passwordVariable: 'RABBIT_PASSWORD'
+                    ),
                 ]) {
                     script {
                         def imageName = "${CONTAINER_NAME}:latest"
@@ -101,6 +106,8 @@ pipeline {
                             -e DB_PASSWORD='${MONGO_PASSWORD}' \\
                             -e MONGO_DB_URL='${MONGO_HOST}' \\
                             -e DB_NAME='${ONTOLOGIES_DATABASE}' \\
+                            -e RABBIT_USER='${RABBIT_USER}' \\
+                            -e RABBIT_PASSWORD='${RABBIT_PASSWORD}' \\
                             --name ${CONTAINER_NAME} \\
                             -p ${ONTOLOGIES_PORT}:8080 \\
                             --network ${NETWORK} \\
