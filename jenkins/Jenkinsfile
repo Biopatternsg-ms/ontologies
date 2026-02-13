@@ -106,6 +106,7 @@ pipeline {
                             -e DB_PASSWORD='${MONGO_PASSWORD}' \\
                             -e MONGO_DB_URL='${MONGO_HOST}' \\
                             -e DB_NAME='${ONTOLOGIES_DATABASE}' \\
+                            -e RABBIT_HOST='${RABBIT_HOST}' \\
                             -e RABBIT_USER='${RABBIT_USER}' \\
                             -e RABBIT_PASSWORD='${RABBIT_PASSWORD}' \\
                             --name ${CONTAINER_NAME} \\
