@@ -97,11 +97,10 @@ pipeline {
                         // Run the new container.
                         sh """
                         docker run -d \\
-                            -e QUARKUS_MONGODB_CREDENTIALS_USERNAME='${MONGO_USER}' \\
-                            -e QUARKUS_MONGODB_CREDENTIALS_PASSWORD='${MONGO_PASSWORD}' \\
-                            -e QUARKUS_MONGODB_CREDENTIALS_AUTH_SOURCE='${MONGO_AUTH_SOURCE}' \\
-                            -e QUARKUS_MONGODB_HOSTS='${MONGO_HOST}' \\
-                            -e QUARKUS_MONGODB_DATABASE='${ONTOLOGIES_DATABASE}' \\
+                            -e DB_USER='${MONGO_USER}' \\
+                            -e DB_PASSWORD='${MONGO_PASSWORD}' \\
+                            -e MONGO_DB_URL='${MONGO_HOST}' \\
+                            -e DB_NAME='${ONTOLOGIES_DATABASE}' \\
                             --name ${CONTAINER_NAME} \\
                             -p ${ONTOLOGIES_PORT}:8080 \\
                             --network ${NETWORK} \\
