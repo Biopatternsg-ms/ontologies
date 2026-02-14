@@ -20,7 +20,13 @@ public class MeshQueueSenderRabbitImpl implements MeshQueueSender {
 
     @Override
     public void senderBiologicalObject(BiologicalObject biologicalObject) {
-        emitter.send(biologicalObject);
-        log.info("Message sent to queue-ncbi: {}", biologicalObject.getName());
+        try {
+            log.info("Attempting to send message to RabbitMQ: {}", biologicalObject.getName());
+            emitter.send(biologicalObject);
+            log.info("Message dispatched to queue-ncbi: {}", biologicalObject.getName());
+        } catch (Exception e) {
+            log.error("Failed to send message to RabbitMQ: {}", biologicalObject.getName(), e);
+            throw e;
+        }
     }
 }
