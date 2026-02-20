@@ -1,5 +1,6 @@
 package com.biopatternsg.application.usecase;
 
+import com.biopatternsg.application.services.BiologicalObjectsService;
 import com.biopatternsg.application.services.MeshOntologyService;
 import com.biopatternsg.domain.model.mesh.BiologicalObject;
 import com.biopatternsg.domain.model.mesh.MeshInfo;
@@ -21,6 +22,7 @@ public class BuildMeshOntologyTreeUseCase implements BuildMeshOntologyTree {
 
     private final MeshOntologyService meshOntologyService;
     private final MeshOntologyRepository meshOntologyRepository;
+    private final BiologicalObjectsService biologicalObjectsService;
 
     @Override
     public void execute(BiologicalObject biologicalObject) {
@@ -37,9 +39,11 @@ public class BuildMeshOntologyTreeUseCase implements BuildMeshOntologyTree {
             return;
         }
 
-
         MeshInfo matchTermId = matchTermIdOptional.get();
         saveMechTerm(matchTermId);
+
+        biologicalObjectsService.updateMeshId(biologicalObject.getId(), matchTermId.getMeshId());
+
         matchTermId.getParents().forEach(termIdsStack::push);
 
         while (!termIdsStack.isEmpty()) {
