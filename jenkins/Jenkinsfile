@@ -83,7 +83,12 @@ pipeline {
                         credentialsId: '06a41492-8765-49c4-91f6-b759260140f0',
                         usernameVariable: 'MONGO_USER',
                         passwordVariable: 'MONGO_PASSWORD'
-                    )
+                    ),
+                    usernamePassword(
+                        credentialsId: 'rabbit-credentials',
+                        usernameVariable: 'RABBIT_USER',
+                        passwordVariable: 'RABBIT_PASSWORD'
+                    ),
                 ]) {
                     script {
                         def imageName = "${CONTAINER_NAME}:latest"
@@ -97,11 +102,13 @@ pipeline {
                         // Run the new container.
                         sh """
                         docker run -d \\
-                            -e QUARKUS_MONGODB_CREDENTIALS_USERNAME='${MONGO_USER}' \\
-                            -e QUARKUS_MONGODB_CREDENTIALS_PASSWORD='${MONGO_PASSWORD}' \\
-                            -e QUARKUS_MONGODB_CREDENTIALS_AUTH_SOURCE='${MONGO_AUTH_SOURCE}' \\
-                            -e QUARKUS_MONGODB_HOSTS='${MONGO_HOST}' \\
-                            -e QUARKUS_MONGODB_DATABASE='${ONTOLOGIES_DATABASE}' \\
+                            -e DB_USER='${MONGO_USER}' \\
+                            -e DB_PASSWORD='${MONGO_PASSWORD}' \\
+                            -e DB_URL='${MONGO_DB_URL}' \\
+                            -e DB_NAME='${ONTOLOGIES_DATABASE}' \\
+                            -e RABBIT_HOST='${RABBIT_HOST}' \\
+                            -e RABBIT_USER='${RABBIT_USER}' \\
+                            -e RABBIT_PASSWORD='${RABBIT_PASSWORD}' \\
                             --name ${CONTAINER_NAME} \\
                             -p ${ONTOLOGIES_PORT}:8080 \\
                             --network ${NETWORK} \\

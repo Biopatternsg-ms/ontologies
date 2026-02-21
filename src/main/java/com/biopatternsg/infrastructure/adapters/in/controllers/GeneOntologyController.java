@@ -1,14 +1,13 @@
-package com.biopatternsg.infrastructure.adapters.in;
+package com.biopatternsg.infrastructure.adapters.in.controllers;
 
-import com.biopatternsg.domain.model.*;
+import com.biopatternsg.domain.model.GeneOntologyBuildTreeRequest;
 import com.biopatternsg.domain.port.in.BuildGeneOntologyTree;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Response;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
@@ -16,9 +15,9 @@ import java.util.concurrent.Executor;
 
 @Slf4j
 @ApplicationScoped
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Path("/gene-ontology")
-public class OntologiesController {
+public class GeneOntologyController {
 
     private final BuildGeneOntologyTree buildGeneOntologyTree;
     private final Executor executor;

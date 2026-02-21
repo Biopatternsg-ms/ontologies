@@ -1,8 +1,9 @@
 package com.biopatternsg.application.services.impl;
 
 import com.biopatternsg.application.services.GeneOntologyTermService;
+import com.biopatternsg.domain.model.GoTerm;
+import com.biopatternsg.domain.model.PathsToRoot;
 import com.biopatternsg.infrastructure.mapper.GoTermMapper;
-import com.biopatternsg.domain.model.*;
 import com.biopatternsg.domain.port.out.external_repositories.GeneOntologyTermRepoWeb;
 import com.biopatternsg.domain.port.out.repositories.GeneOntologyTermRepository;
 import com.biopatternsg.infrastructure.external_services.dto.go.GoTermResponse;
