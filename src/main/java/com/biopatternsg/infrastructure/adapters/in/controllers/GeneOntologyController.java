@@ -9,6 +9,12 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -24,6 +30,34 @@ public class GeneOntologyController {
 
     @POST
     @Path("/build-tree")
+    @Operation(
+            summary = "Build Gene Ontology tree",
+            description = "Initiates the process of building a Gene Ontology tree based on the provided request parameters."
+    )
+    @APIResponses({
+            @APIResponse(
+                    responseCode = "202",
+                    description = "Gene Ontology tree building process started successfully",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    type = SchemaType.STRING,
+                                    description = "Success message"
+                            )
+                    )
+            ),
+            @APIResponse(
+                    responseCode = "500",
+                    description = "Internal server error occurred while building gene ontology tree",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    type = SchemaType.STRING,
+                                    description = "Error message"
+                            )
+                    )
+            )
+    })
     public Response buildTreeGO(@Valid GeneOntologyBuildTreeRequest geneOntologyBuildTreeRequest) {
         CompletableFuture.runAsync(() -> {
             try {
