@@ -16,7 +16,10 @@
 package com.biopatternsg.infrastructure.adapters.in.controllers;
 
 import com.biopatternsg.domain.model.mesh.BiologicalObject;
+import com.biopatternsg.domain.port.in.SearchMeshIdBySynonyms;
 import com.biopatternsg.domain.port.in.SendBiologicalObjectToQueue;
+import com.biopatternsg.infrastructure.dtos.MeshIdResponse;
+import com.biopatternsg.infrastructure.dtos.SearchMeshIdRequest;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
@@ -31,6 +34,7 @@ import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
@@ -41,7 +45,45 @@ import java.util.concurrent.Executor;
 public class MeshOntologyController {
 
     private final SendBiologicalObjectToQueue sendBiologicalObjectToQueue;
+    private final SearchMeshIdBySynonyms searchMeshIdBySynonyms;
     private final Executor executor;
+
+    @POST
+    @Path("/search-mesh-id")
+    @Operation(
+            summary = "Search MeSH ID by synonyms",
+            description = "Searches for a matching MeSH term by checking synonyms against name and synonyms in mesh_ontology case-insensitively."
+    )
+    @APIResponses({
+            @APIResponse(
+                    responseCode = "200",
+                    description = "MeSH ID found successfully",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = MeshIdResponse.class)
+                    )
+            ),
+            @APIResponse(
+                    responseCode = "404",
+                    description = "MeSH term not found for provided synonyms",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    type = SchemaType.STRING,
+                                    description = "Not found error message"
+                            )
+                    )
+            )
+    })
+    public Response searchMeshId(@Valid SearchMeshIdRequest request) {
+        Optional<String> meshIdOptional = searchMeshIdBySynonyms.execute(request.synonyms());
+
+        return meshIdOptional
+                .map(meshId -> Response.ok(new MeshIdResponse(meshId)).build())
+                .orElseGet(() -> Response.status(Response.Status.NOT_FOUND)
+                        .entity("{\"message\": \"MeSH term not found for provided synonyms\"}")
+                        .build());
+    }
 
     @POST
     @Path("/mesh")

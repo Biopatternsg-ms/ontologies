@@ -13,17 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.biopatternsg.domain.port.out.repositories;
+package com.biopatternsg.infrastructure.dtos;
 
-import com.biopatternsg.infrastructure.mongo.MeshTermCollection;
-
+import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
-import java.util.Optional;
 
-public interface MeshOntologyRepository {
-    void save(MeshTermCollection meshTermCollection);
-    Optional<MeshTermCollection> findByMeshId(String meshId);
-    Optional<MeshTermCollection> findByName(String name);
-    Optional<MeshTermCollection> findBySynonyms(List<String> synonyms);
-    Optional<MeshTermCollection> findBySynonymsCaseInsensitive(List<String> synonyms);
+public record SearchMeshIdRequest(
+        @NotEmpty(message = "Synonyms list cannot be empty")
+        List<String> synonyms
+) {
 }

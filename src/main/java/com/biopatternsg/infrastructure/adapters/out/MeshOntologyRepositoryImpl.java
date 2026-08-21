@@ -21,7 +21,9 @@ import io.quarkus.mongodb.panache.PanacheMongoRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 @ApplicationScoped
 public class MeshOntologyRepositoryImpl implements MeshOntologyRepository, PanacheMongoRepository<MeshTermCollection> {
@@ -44,5 +46,25 @@ public class MeshOntologyRepositoryImpl implements MeshOntologyRepository, Panac
     @Override
     public Optional<MeshTermCollection> findBySynonyms(List<String> synonyms) {
         return find("{$or: [{synonyms: {$in: ?1}}, {name: {$in: ?1}}]}", synonyms).firstResultOptional();
+    }
+
+    @Override
+    public Optional<MeshTermCollection> findBySynonymsCaseInsensitive(List<String> synonyms) {
+        if (synonyms == null || synonyms.isEmpty()) {
+            return Optional.empty();
+        }
+
+        List<Pattern> regexList = synonyms.stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(s -> Pattern.compile("^" + Pattern.quote(s) + "$", Pattern.CASE_INSENSITIVE))
+                .toList();
+
+        if (regexList.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return find("{$or: [{synonyms: {$in: ?1}}, {name: {$in: ?1}}]}", regexList).firstResultOptional();
     }
 }

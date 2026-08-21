@@ -13,17 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.biopatternsg.domain.port.out.repositories;
-
-import com.biopatternsg.infrastructure.mongo.MeshTermCollection;
+package com.biopatternsg.domain.port.in;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface MeshOntologyRepository {
-    void save(MeshTermCollection meshTermCollection);
-    Optional<MeshTermCollection> findByMeshId(String meshId);
-    Optional<MeshTermCollection> findByName(String name);
-    Optional<MeshTermCollection> findBySynonyms(List<String> synonyms);
-    Optional<MeshTermCollection> findBySynonymsCaseInsensitive(List<String> synonyms);
+public interface SearchMeshIdBySynonyms {
+    Optional<String> execute(List<String> synonyms);
 }
