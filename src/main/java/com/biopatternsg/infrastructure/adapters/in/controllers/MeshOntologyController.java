@@ -16,8 +16,11 @@
 package com.biopatternsg.infrastructure.adapters.in.controllers;
 
 import com.biopatternsg.domain.model.mesh.BiologicalObject;
+import com.biopatternsg.domain.port.in.CheckMeshTermType;
 import com.biopatternsg.domain.port.in.SearchMeshIdBySynonyms;
 import com.biopatternsg.domain.port.in.SendBiologicalObjectToQueue;
+import com.biopatternsg.infrastructure.dtos.CheckMeshTypeRequest;
+import com.biopatternsg.infrastructure.dtos.CheckMeshTypeResponse;
 import com.biopatternsg.infrastructure.dtos.MeshIdResponse;
 import com.biopatternsg.infrastructure.dtos.SearchMeshIdRequest;
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -46,7 +49,41 @@ public class MeshOntologyController {
 
     private final SendBiologicalObjectToQueue sendBiologicalObjectToQueue;
     private final SearchMeshIdBySynonyms searchMeshIdBySynonyms;
+    private final CheckMeshTermType checkMeshTermType;
     private final Executor executor;
+
+    @POST
+    @Path("/check-type")
+    @Operation(
+            summary = "Check MeSH node type",
+            description = "Evaluates whether a MeSH node or its ancestors in the ontology hierarchy match a specified category (e.g. PROTEIN, ENZYME, RECEPTOR, LIGAND, etc.)."
+    )
+    @APIResponses({
+            @APIResponse(
+                    responseCode = "200",
+                    description = "Type evaluation result",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = CheckMeshTypeResponse.class)
+                    )
+            ),
+            @APIResponse(
+                    responseCode = "400",
+                    description = "Invalid request payload",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    type = SchemaType.STRING,
+                                    description = "Error message"
+                            )
+                    )
+            )
+    })
+    public Response checkType(@Valid CheckMeshTypeRequest request) {
+        boolean isType = checkMeshTermType.execute(request.meshId(), request.type());
+        CheckMeshTypeResponse response = new CheckMeshTypeResponse(request.meshId(), request.type(), isType);
+        return Response.ok(response).build();
+    }
 
     @POST
     @Path("/search-mesh-id")
