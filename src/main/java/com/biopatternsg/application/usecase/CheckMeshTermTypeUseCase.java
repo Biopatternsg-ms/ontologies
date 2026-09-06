@@ -16,9 +16,9 @@
 package com.biopatternsg.application.usecase;
 
 import com.biopatternsg.domain.model.mesh.MeshCategory;
+import com.biopatternsg.domain.model.mesh.MeshInfo;
 import com.biopatternsg.domain.port.in.CheckMeshTermType;
 import com.biopatternsg.domain.port.out.repositories.MeshOntologyRepository;
-import com.biopatternsg.infrastructure.mongo.MeshTermCollection;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,10 +50,10 @@ public class CheckMeshTermTypeUseCase implements CheckMeshTermType {
 
         while (!queue.isEmpty()) {
             String currentId = queue.poll();
-            Optional<MeshTermCollection> termOpt = meshOntologyRepository.findByMeshId(currentId);
+            Optional<MeshInfo> termOpt = meshOntologyRepository.findByMeshId(currentId);
 
             if (termOpt.isPresent()) {
-                MeshTermCollection term = termOpt.get();
+                MeshInfo term = termOpt.get();
 
                 if (targetType.matches(term.getMeshId(), term.getName(), term.getSynonyms())) {
                     log.info("MeSH node {} matched type {} at term: {} ({})", initialMeshId, targetType, term.getName(), term.getMeshId());

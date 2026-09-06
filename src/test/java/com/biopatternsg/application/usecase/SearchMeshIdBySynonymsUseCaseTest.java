@@ -15,8 +15,8 @@
  */
 package com.biopatternsg.application.usecase;
 
+import com.biopatternsg.domain.model.mesh.MeshInfo;
 import com.biopatternsg.domain.port.out.repositories.MeshOntologyRepository;
-import com.biopatternsg.infrastructure.mongo.MeshTermCollection;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -33,28 +33,28 @@ class SearchMeshIdBySynonymsUseCaseTest {
 
     private static class StubMeshOntologyRepository implements MeshOntologyRepository {
         List<String> lastPassedSynonyms;
-        MeshTermCollection returnTerm;
+        MeshInfo returnTerm;
 
         @Override
-        public void save(MeshTermCollection meshTermCollection) {}
+        public void save(MeshInfo meshInfo) {}
 
         @Override
-        public Optional<MeshTermCollection> findByMeshId(String meshId) {
+        public Optional<MeshInfo> findByMeshId(String meshId) {
             return Optional.empty();
         }
 
         @Override
-        public Optional<MeshTermCollection> findByName(String name) {
+        public Optional<MeshInfo> findByName(String name) {
             return Optional.empty();
         }
 
         @Override
-        public Optional<MeshTermCollection> findBySynonyms(List<String> synonyms) {
+        public Optional<MeshInfo> findBySynonyms(List<String> synonyms) {
             return Optional.empty();
         }
 
         @Override
-        public Optional<MeshTermCollection> findBySynonymsCaseInsensitive(List<String> synonyms) {
+        public Optional<MeshInfo> findBySynonymsCaseInsensitive(List<String> synonyms) {
             this.lastPassedSynonyms = synonyms;
             return Optional.ofNullable(returnTerm);
         }
@@ -89,9 +89,10 @@ class SearchMeshIdBySynonymsUseCaseTest {
 
     @Test
     void shouldReturnMeshIdWhenMatchIsFound() {
-        MeshTermCollection term = new MeshTermCollection();
-        term.setMeshId("D002784");
-        term.setName("Cholesterol");
+        MeshInfo term = MeshInfo.builder()
+                .meshId("D002784")
+                .name("Cholesterol")
+                .build();
         stubRepository.returnTerm = term;
 
         Optional<String> result = useCase.execute(List.of("cholesterin", "cyp7a1"));
@@ -103,9 +104,10 @@ class SearchMeshIdBySynonymsUseCaseTest {
 
     @Test
     void shouldSplitCommaSeparatedSynonymsAndFindMatch() {
-        MeshTermCollection term = new MeshTermCollection();
-        term.setMeshId("D002784");
-        term.setName("Cholesterol");
+        MeshInfo term = MeshInfo.builder()
+                .meshId("D002784")
+                .name("Cholesterol")
+                .build();
         stubRepository.returnTerm = term;
 
         Optional<String> result = useCase.execute(List.of("cholesterin, Cholest-5-en-3-ol"));

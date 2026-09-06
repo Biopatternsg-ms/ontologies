@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.biopatternsg.infrastructure.external_services.dto.mesh;
+package com.biopatternsg.domain.model.mesh;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

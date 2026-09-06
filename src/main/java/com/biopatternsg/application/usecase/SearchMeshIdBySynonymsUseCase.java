@@ -15,9 +15,9 @@
  */
 package com.biopatternsg.application.usecase;
 
+import com.biopatternsg.domain.model.mesh.MeshInfo;
 import com.biopatternsg.domain.port.in.SearchMeshIdBySynonyms;
 import com.biopatternsg.domain.port.out.repositories.MeshOntologyRepository;
-import com.biopatternsg.infrastructure.mongo.MeshTermCollection;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -56,7 +56,7 @@ public class SearchMeshIdBySynonymsUseCase implements SearchMeshIdBySynonyms {
 
         log.info("Searching MeSH ID for synonyms: {}", cleanSynonyms);
 
-        Optional<MeshTermCollection> matchOptional = meshOntologyRepository.findBySynonymsCaseInsensitive(cleanSynonyms);
+        Optional<MeshInfo> matchOptional = meshOntologyRepository.findBySynonymsCaseInsensitive(cleanSynonyms);
 
         if (matchOptional.isPresent()) {
             String meshId = matchOptional.get().getMeshId();

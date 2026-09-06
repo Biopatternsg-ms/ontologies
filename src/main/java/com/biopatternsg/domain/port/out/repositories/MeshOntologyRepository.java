@@ -15,15 +15,15 @@
  */
 package com.biopatternsg.domain.port.out.repositories;
 
-import com.biopatternsg.infrastructure.mongo.MeshTermCollection;
+import com.biopatternsg.domain.model.mesh.MeshInfo;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface MeshOntologyRepository {
-    void save(MeshTermCollection meshTermCollection);
-    Optional<MeshTermCollection> findByMeshId(String meshId);
-    Optional<MeshTermCollection> findByName(String name);
-    Optional<MeshTermCollection> findBySynonyms(List<String> synonyms);
-    Optional<MeshTermCollection> findBySynonymsCaseInsensitive(List<String> synonyms);
+    void save(MeshInfo meshInfo);
+    Optional<MeshInfo> findByMeshId(String meshId);
+    Optional<MeshInfo> findByName(String name);
+    Optional<MeshInfo> findBySynonyms(List<String> synonyms);
+    Optional<MeshInfo> findBySynonymsCaseInsensitive(List<String> synonyms);
 }

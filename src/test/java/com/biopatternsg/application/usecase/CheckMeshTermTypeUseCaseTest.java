@@ -16,8 +16,8 @@
 package com.biopatternsg.application.usecase;
 
 import com.biopatternsg.domain.model.mesh.MeshCategory;
+import com.biopatternsg.domain.model.mesh.MeshInfo;
 import com.biopatternsg.domain.port.out.repositories.MeshOntologyRepository;
-import com.biopatternsg.infrastructure.mongo.MeshTermCollection;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -31,32 +31,32 @@ class CheckMeshTermTypeUseCaseTest {
     private CheckMeshTermTypeUseCase useCase;
 
     private static class StubMeshOntologyRepository implements MeshOntologyRepository {
-        Map<String, MeshTermCollection> store = new HashMap<>();
+        Map<String, MeshInfo> store = new HashMap<>();
 
         @Override
-        public void save(MeshTermCollection meshTermCollection) {
-            if (meshTermCollection != null && meshTermCollection.getMeshId() != null) {
-                store.put(meshTermCollection.getMeshId(), meshTermCollection);
+        public void save(MeshInfo meshInfo) {
+            if (meshInfo != null && meshInfo.getMeshId() != null) {
+                store.put(meshInfo.getMeshId(), meshInfo);
             }
         }
 
         @Override
-        public Optional<MeshTermCollection> findByMeshId(String meshId) {
+        public Optional<MeshInfo> findByMeshId(String meshId) {
             return Optional.ofNullable(store.get(meshId));
         }
 
         @Override
-        public Optional<MeshTermCollection> findByName(String name) {
+        public Optional<MeshInfo> findByName(String name) {
             return store.values().stream().filter(t -> Objects.equals(t.getName(), name)).findFirst();
         }
 
         @Override
-        public Optional<MeshTermCollection> findBySynonyms(List<String> synonyms) {
+        public Optional<MeshInfo> findBySynonyms(List<String> synonyms) {
             return Optional.empty();
         }
 
         @Override
-        public Optional<MeshTermCollection> findBySynonymsCaseInsensitive(List<String> synonyms) {
+        public Optional<MeshInfo> findBySynonymsCaseInsensitive(List<String> synonyms) {
             return Optional.empty();
         }
     }
@@ -67,13 +67,13 @@ class CheckMeshTermTypeUseCaseTest {
         useCase = new CheckMeshTermTypeUseCase(stubRepository);
     }
 
-    private MeshTermCollection createTerm(String meshId, String name, List<String> synonyms, List<String> parents) {
-        MeshTermCollection term = new MeshTermCollection();
-        term.setMeshId(meshId);
-        term.setName(name);
-        term.setSynonyms(synonyms != null ? synonyms : List.of());
-        term.setParents(parents != null ? parents : List.of());
-        return term;
+    private MeshInfo createTerm(String meshId, String name, List<String> synonyms, List<String> parents) {
+        return MeshInfo.builder()
+                .meshId(meshId)
+                .name(name)
+                .synonyms(synonyms != null ? synonyms : List.of())
+                .parents(parents != null ? parents : List.of())
+                .build();
     }
 
     @Test

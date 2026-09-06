@@ -15,9 +15,9 @@
  */
 package com.biopatternsg.infrastructure.adapters.out.external_repositories;
 
+import com.biopatternsg.domain.model.mesh.SummaryMesh;
 import com.biopatternsg.domain.port.out.external_repositories.MeshOntologyRepoWeb;
 import com.biopatternsg.infrastructure.external_services.QueryMesh;
-import com.biopatternsg.infrastructure.external_services.dto.mesh.SummaryMesh;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 
