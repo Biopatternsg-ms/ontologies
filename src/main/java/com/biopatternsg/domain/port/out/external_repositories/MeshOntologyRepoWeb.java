@@ -15,7 +15,7 @@
  */
 package com.biopatternsg.domain.port.out.external_repositories;
 
-import com.biopatternsg.infrastructure.external_services.dto.mesh.SummaryMesh;
+import com.biopatternsg.domain.model.mesh.SummaryMesh;
 
 import java.util.List;
 

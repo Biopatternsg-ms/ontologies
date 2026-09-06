@@ -16,15 +16,16 @@
 package com.biopatternsg.application.usecase;
 
 import com.biopatternsg.domain.model.mesh.BiologicalObject;
+import com.biopatternsg.domain.model.mesh.MeshInfo;
 import com.biopatternsg.domain.port.in.SendBiologicalObjectToQueue;
+import com.biopatternsg.domain.port.out.producers.MeshQueueSender;
 import com.biopatternsg.domain.port.out.repositories.MeshOntologyRepository;
-import com.biopatternsg.infrastructure.adapters.out.producers.MeshQueueSenderRabbitImpl;
-import com.biopatternsg.infrastructure.mongo.MeshTermCollection;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -32,7 +33,7 @@ import java.util.*;
 public class SendBiologicalObjectToQueueUseCase implements SendBiologicalObjectToQueue {
 
     private final MeshOntologyRepository meshOntologyRepository;
-    private final MeshQueueSenderRabbitImpl meshRabbitSender;
+    private final MeshQueueSender meshRabbitSender;
 
     @Override
     public void execute(BiologicalObject biologicalObject) {
@@ -46,12 +47,12 @@ public class SendBiologicalObjectToQueueUseCase implements SendBiologicalObjectT
     }
 
     private boolean isSavedSynonyms(List<String> synonyms) {
-        Optional<MeshTermCollection> byName = meshOntologyRepository.findBySynonyms(synonyms);
-        return byName.isPresent();
+        Optional<MeshInfo> bySynonyms = meshOntologyRepository.findBySynonyms(synonyms);
+        return bySynonyms.isPresent();
     }
 
     boolean isSavedName(String name) {
-        Optional<MeshTermCollection> byName = meshOntologyRepository.findByName(name);
+        Optional<MeshInfo> byName = meshOntologyRepository.findByName(name);
         return byName.isPresent();
     }
 

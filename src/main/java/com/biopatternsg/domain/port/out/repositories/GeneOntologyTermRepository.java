@@ -15,11 +15,11 @@
  */
 package com.biopatternsg.domain.port.out.repositories;
 
-import com.biopatternsg.infrastructure.mongo.GoTermCollection;
+import com.biopatternsg.domain.model.GoTerm;
 
 import java.util.List;
 
 public interface GeneOntologyTermRepository {
-    List<GoTermCollection> findByIds(List<String> ids);
-    void save(GoTermCollection goTermCollection);
+    List<GoTerm> findByIds(List<String> ids);
+    void save(GoTerm goTerm);
 }

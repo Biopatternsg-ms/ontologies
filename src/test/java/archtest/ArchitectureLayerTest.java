@@ -17,6 +17,7 @@ package archtest;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
+import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition;
 import com.tngtech.archunit.library.Architectures;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,7 +26,7 @@ import org.junit.jupiter.api.Test;
 
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 
-public class ArchitectureLayerTest {
+class ArchitectureLayerTest {
 
     private static final String ROOT = "com.biopatternsg";
 
@@ -33,7 +34,9 @@ public class ArchitectureLayerTest {
 
     @BeforeEach
     void init() {
-        this.javaClasses = new ClassFileImporter().importPackages(ROOT);
+        this.javaClasses = new ClassFileImporter()
+                .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+                .importPackages(ROOT);
     }
 
     @DisplayName("The class in the layer applications should only used for others class by the same layer")
@@ -44,19 +47,16 @@ public class ArchitectureLayerTest {
                 .layer("Application").definedBy(ROOT + ".application..")
                 .whereLayer("Application").mayOnlyBeAccessedByLayers("Application");
         architecture.check(this.javaClasses);
-
     }
 
     @DisplayName("The implementation of the uses cases should not invoked directly")
     @Test
     void layerApplicationUsesCasesTest() {
-
         Architectures.LayeredArchitecture architecture = layeredArchitecture()
                 .consideringAllDependencies()
-                .layer("ApplicationUsesCases").definedBy(ROOT+".application.usecase..")
+                .layer("ApplicationUsesCases").definedBy(ROOT + ".application.usecase..")
                 .whereLayer("ApplicationUsesCases").mayNotBeAccessedByAnyLayer();
         architecture.check(this.javaClasses);
-
     }
 
     @DisplayName("The Domain layer should not depend on Application or Infrastructure layers")
@@ -93,7 +93,7 @@ public class ArchitectureLayerTest {
     @Test
     void controllersNamingConventionTest() {
         ArchRuleDefinition.classes()
-                .that().resideInAPackage("..infrastructure.adaptars.in.restcontrollers..")
+                .that().resideInAPackage("..infrastructure.adapters.in.restcontrollers..")
                 .should().haveSimpleNameEndingWith("Controller")
                 .check(this.javaClasses);
     }
@@ -102,7 +102,7 @@ public class ArchitectureLayerTest {
     @Test
     void adaptersNamingConventionTest() {
         ArchRuleDefinition.classes()
-                .that().resideInAPackage("..infrastructure.adaptars.out..")
+                .that().resideInAPackage("..infrastructure.adapters.out..")
                 .should().haveSimpleNameEndingWith("Adapter")
                 .check(this.javaClasses);
     }

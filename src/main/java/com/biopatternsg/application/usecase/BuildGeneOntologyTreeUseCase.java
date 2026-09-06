@@ -19,14 +19,14 @@ import com.biopatternsg.application.services.GeneOntologyTermService;
 import com.biopatternsg.domain.model.GeneOntologyBuildTreeRequest;
 import com.biopatternsg.domain.model.GoTerm;
 import com.biopatternsg.domain.model.PathToRoot;
-import com.biopatternsg.infrastructure.mapper.GoTermMapper;
 import com.biopatternsg.domain.port.in.BuildGeneOntologyTree;
 import com.biopatternsg.domain.port.out.repositories.GeneOntologyTermRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -35,10 +35,7 @@ import java.util.stream.Collectors;
 public class BuildGeneOntologyTreeUseCase implements BuildGeneOntologyTree {
 
     private final GeneOntologyTermService geneOntologyTermService;
-
     private final GeneOntologyTermRepository goTermRepository;
-
-    private final GoTermMapper goTermMapper;
 
     @Override
     public void execute(GeneOntologyBuildTreeRequest geneOntology) {
@@ -58,7 +55,7 @@ public class BuildGeneOntologyTreeUseCase implements BuildGeneOntologyTree {
         newGoTerms.forEach(goTerm -> {
             List<GoTerm.ParentRelation> parentRelations = getParentRelations(goTerm.getTermId());
             goTerm.setParentRelations(parentRelations);
-            goTermRepository.save(goTermMapper.toEntity(goTerm));
+            goTermRepository.save(goTerm);
         });
 
         log.info("End Building gene ontology tree");
@@ -85,4 +82,3 @@ public class BuildGeneOntologyTreeUseCase implements BuildGeneOntologyTree {
         return goIdsOfRequest.stream().filter(id -> !termIdsInDB.contains(id)).toList();
     }
 }
-
