@@ -13,17 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.biopatternsg.domain.port.out.repositories;
+package com.biopatternsg.domain.model.mesh;
 
-import com.biopatternsg.domain.model.mesh.MeshInfo;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.Set;
 
-public interface MeshOntologyRepository {
-    void save(MeshInfo meshInfo);
-    Optional<MeshInfo> findByMeshId(String meshId);
-    Optional<MeshInfo> findByName(String name);
-    Optional<MeshInfo> findBySynonyms(List<String> synonyms);
-    Optional<MeshInfo> findBySynonymsCaseInsensitive(List<String> synonyms);
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class SummaryMesh {
+    private Set<String> parents;
+    private Set<String> meshSynonyms;
 }

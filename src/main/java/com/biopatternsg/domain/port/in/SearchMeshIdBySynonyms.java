@@ -13,17 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.biopatternsg.domain.port.out.repositories;
-
-import com.biopatternsg.domain.model.mesh.MeshInfo;
+package com.biopatternsg.domain.port.in;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface MeshOntologyRepository {
-    void save(MeshInfo meshInfo);
-    Optional<MeshInfo> findByMeshId(String meshId);
-    Optional<MeshInfo> findByName(String name);
-    Optional<MeshInfo> findBySynonyms(List<String> synonyms);
-    Optional<MeshInfo> findBySynonymsCaseInsensitive(List<String> synonyms);
+public interface SearchMeshIdBySynonyms {
+    Optional<String> execute(List<String> synonyms);
 }

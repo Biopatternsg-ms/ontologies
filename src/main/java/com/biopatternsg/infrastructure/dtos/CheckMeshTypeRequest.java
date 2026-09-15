@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.biopatternsg.domain.port.out.repositories;
+package com.biopatternsg.infrastructure.dtos;
 
-import com.biopatternsg.domain.model.mesh.MeshInfo;
+import com.biopatternsg.domain.model.mesh.MeshCategory;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
-import java.util.List;
-import java.util.Optional;
+public record CheckMeshTypeRequest(
+        @NotBlank(message = "meshId is required")
+        String meshId,
 
-public interface MeshOntologyRepository {
-    void save(MeshInfo meshInfo);
-    Optional<MeshInfo> findByMeshId(String meshId);
-    Optional<MeshInfo> findByName(String name);
-    Optional<MeshInfo> findBySynonyms(List<String> synonyms);
-    Optional<MeshInfo> findBySynonymsCaseInsensitive(List<String> synonyms);
+        @NotNull(message = "type is required")
+        MeshCategory type
+) {
 }

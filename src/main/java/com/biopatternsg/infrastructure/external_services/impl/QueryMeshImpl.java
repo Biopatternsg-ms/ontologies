@@ -17,9 +17,9 @@ package com.biopatternsg.infrastructure.external_services.impl;
 
 import com.biopatternsg.domain.model.mesh.ESearchResult;
 import com.biopatternsg.domain.model.mesh.ESummaryResult;
+import com.biopatternsg.domain.model.mesh.SummaryMesh;
 import com.biopatternsg.infrastructure.clients.external_clients.MeshOntologyHttpClient;
 import com.biopatternsg.infrastructure.external_services.QueryMesh;
-import com.biopatternsg.infrastructure.external_services.dto.mesh.SummaryMesh;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.rest.client.inject.RestClient;

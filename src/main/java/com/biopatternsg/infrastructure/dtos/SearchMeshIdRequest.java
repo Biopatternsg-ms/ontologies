@@ -13,20 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.biopatternsg.infrastructure.external_services.dto.mesh;
+package com.biopatternsg.infrastructure.dtos;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.NotEmpty;
+import java.util.List;
 
-import java.util.Set;
-
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class SummaryMesh {
-    private Set<String> parents;
-    private Set<String> meshSynonyms;
+public record SearchMeshIdRequest(
+        @NotEmpty(message = "Synonyms list cannot be empty")
+        List<String> synonyms
+) {
 }

@@ -15,10 +15,12 @@
  */
 package com.biopatternsg.infrastructure.adapters.out.external_repositories;
 
+import com.biopatternsg.domain.model.GoTerm;
 import com.biopatternsg.domain.model.PathsToRoot;
 import com.biopatternsg.domain.port.out.external_repositories.GeneOntologyTermRepoWeb;
 import com.biopatternsg.infrastructure.external_services.QueryGO;
 import com.biopatternsg.infrastructure.external_services.dto.go.GoTermResponse;
+import com.biopatternsg.infrastructure.mapper.GoTermMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.List;
@@ -27,9 +29,11 @@ import java.util.List;
 public class GOAdapter implements GeneOntologyTermRepoWeb {
 
     private final QueryGO queryGO;
+    private final GoTermMapper goTermMapper;
 
-    public GOAdapter(QueryGO queryGO) {
+    public GOAdapter(QueryGO queryGO, GoTermMapper goTermMapper) {
         this.queryGO = queryGO;
+        this.goTermMapper = goTermMapper;
     }
 
     @Override
@@ -38,8 +42,9 @@ public class GOAdapter implements GeneOntologyTermRepoWeb {
     }
 
     @Override
-    public GoTermResponse findGOTerms(List<String> goTermIds) {
+    public List<GoTerm> findGOTerms(List<String> goTermIds) {
         String joinIds = String.join(",", goTermIds);
-        return queryGO.findGeneOntologies(joinIds);
+        GoTermResponse response = queryGO.findGeneOntologies(joinIds);
+        return goTermMapper.toEntity(response);
     }
 }

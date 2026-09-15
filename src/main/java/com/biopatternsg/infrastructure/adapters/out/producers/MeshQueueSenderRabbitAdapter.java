@@ -27,7 +27,7 @@ import org.eclipse.microprofile.reactive.messaging.Emitter;
 @Slf4j
 @ApplicationScoped
 @RequiredArgsConstructor
-public class MeshQueueSenderRabbitImpl implements MeshQueueSender {
+public class MeshQueueSenderRabbitAdapter implements MeshQueueSender {
 
     @Inject
     @Channel("ncbi-out")

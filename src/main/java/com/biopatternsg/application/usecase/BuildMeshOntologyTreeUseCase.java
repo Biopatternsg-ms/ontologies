@@ -19,10 +19,9 @@ import com.biopatternsg.application.services.BiologicalObjectsService;
 import com.biopatternsg.application.services.MeshOntologyService;
 import com.biopatternsg.domain.model.mesh.BiologicalObject;
 import com.biopatternsg.domain.model.mesh.MeshInfo;
+import com.biopatternsg.domain.model.mesh.SummaryMesh;
 import com.biopatternsg.domain.port.in.BuildMeshOntologyTree;
 import com.biopatternsg.domain.port.out.repositories.MeshOntologyRepository;
-import com.biopatternsg.infrastructure.external_services.dto.mesh.SummaryMesh;
-import com.biopatternsg.infrastructure.mongo.MeshTermCollection;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -92,13 +91,7 @@ public class BuildMeshOntologyTreeUseCase implements BuildMeshOntologyTree {
     }
 
     private void saveMechTerm(MeshInfo matchTermId) {
-        MeshTermCollection collection = new MeshTermCollection();
-        collection.setMeshId(matchTermId.getMeshId());
-        collection.setName(matchTermId.getName());
-        collection.setSynonyms(matchTermId.getSynonyms());
-        collection.setParents(matchTermId.getParents());
-
-        meshOntologyRepository.save(collection);
+        meshOntologyRepository.save(matchTermId);
     }
 
     Optional<MeshInfo> findFirstMatchTerm(List<String> meshTermIds, List<String> biologicalObjectsSynonyms, String name) {
@@ -128,7 +121,7 @@ public class BuildMeshOntologyTreeUseCase implements BuildMeshOntologyTree {
     }
 
     boolean isSavedName(String name) {
-        Optional<MeshTermCollection> byName = meshOntologyRepository.findByName(name);
+        Optional<MeshInfo> byName = meshOntologyRepository.findByName(name);
         return byName.isPresent();
     }
 
@@ -148,7 +141,7 @@ public class BuildMeshOntologyTreeUseCase implements BuildMeshOntologyTree {
     }
 
     boolean isSavedTerm(String term) {
-        Optional<MeshTermCollection> byName = meshOntologyRepository.findByMeshId(term);
+        Optional<MeshInfo> byName = meshOntologyRepository.findByMeshId(term);
         return byName.isPresent();
     }
 
