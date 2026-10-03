@@ -18,6 +18,7 @@ package com.biopatternsg.domain.port.out.repositories;
 import com.biopatternsg.domain.model.mesh.MeshInfo;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface MeshOntologyRepository {
@@ -26,4 +27,6 @@ public interface MeshOntologyRepository {
     Optional<MeshInfo> findByName(String name);
     Optional<MeshInfo> findBySynonyms(List<String> synonyms);
     Optional<MeshInfo> findBySynonymsCaseInsensitive(List<String> synonyms);
+    default void updateCategories(String meshId, Map<String, Boolean> categories) {}
+    default void updateCategory(String meshId, String category, boolean isType) {}
 }

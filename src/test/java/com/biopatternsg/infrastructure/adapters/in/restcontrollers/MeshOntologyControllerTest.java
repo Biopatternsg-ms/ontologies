@@ -18,6 +18,8 @@ package com.biopatternsg.infrastructure.adapters.in.restcontrollers;
 import com.biopatternsg.domain.model.mesh.MeshCategory;
 import com.biopatternsg.domain.port.in.CheckMeshTermType;
 import com.biopatternsg.domain.port.in.SearchMeshIdBySynonyms;
+import com.biopatternsg.infrastructure.dtos.CheckAllMeshTypesRequest;
+import com.biopatternsg.infrastructure.dtos.CheckAllMeshTypesResponse;
 import com.biopatternsg.infrastructure.dtos.CheckMeshTypeRequest;
 import com.biopatternsg.infrastructure.dtos.CheckMeshTypeResponse;
 import com.biopatternsg.infrastructure.dtos.MeshIdResponse;
@@ -26,16 +28,31 @@ import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class MeshOntologyControllerTest {
 
+    private CheckMeshTermType createCheckTypePort(boolean executeResult) {
+        return new CheckMeshTermType() {
+            @Override
+            public boolean execute(String meshId, MeshCategory targetType) {
+                return executeResult;
+            }
+
+            @Override
+            public Map<MeshCategory, Boolean> executeAll(String meshId) {
+                return Map.of();
+            }
+        };
+    }
+
     @Test
     void shouldReturn200AndMeshIdWhenMatchFound() {
         SearchMeshIdBySynonyms searchPort = synonyms -> Optional.of("D002784");
-        CheckMeshTermType checkTypePort = (meshId, type) -> true;
+        CheckMeshTermType checkTypePort = createCheckTypePort(true);
         MeshOntologyController controller = new MeshOntologyController(obj -> {}, searchPort, checkTypePort, Runnable::run);
 
         SearchMeshIdRequest request = new SearchMeshIdRequest(List.of("cholesterol", "cyp7a1"));
@@ -50,7 +67,7 @@ class MeshOntologyControllerTest {
     @Test
     void shouldReturn404WhenNoMatchFound() {
         SearchMeshIdBySynonyms searchPort = synonyms -> Optional.empty();
-        CheckMeshTermType checkTypePort = (meshId, type) -> false;
+        CheckMeshTermType checkTypePort = createCheckTypePort(false);
         MeshOntologyController controller = new MeshOntologyController(obj -> {}, searchPort, checkTypePort, Runnable::run);
 
         SearchMeshIdRequest request = new SearchMeshIdRequest(List.of("unknown_term"));
@@ -63,7 +80,7 @@ class MeshOntologyControllerTest {
     @Test
     void shouldReturn200WithIsTypeTrueWhenCheckTypeIsTrue() {
         SearchMeshIdBySynonyms searchPort = synonyms -> Optional.empty();
-        CheckMeshTermType checkTypePort = (meshId, type) -> true;
+        CheckMeshTermType checkTypePort = createCheckTypePort(true);
         MeshOntologyController controller = new MeshOntologyController(obj -> {}, searchPort, checkTypePort, Runnable::run);
 
         CheckMeshTypeRequest request = new CheckMeshTypeRequest("D007371", MeshCategory.LIGAND);
@@ -81,7 +98,7 @@ class MeshOntologyControllerTest {
     @Test
     void shouldReturn200WithIsTypeFalseWhenCheckTypeIsFalse() {
         SearchMeshIdBySynonyms searchPort = synonyms -> Optional.empty();
-        CheckMeshTermType checkTypePort = (meshId, type) -> false;
+        CheckMeshTermType checkTypePort = createCheckTypePort(false);
         MeshOntologyController controller = new MeshOntologyController(obj -> {}, searchPort, checkTypePort, Runnable::run);
 
         CheckMeshTypeRequest request = new CheckMeshTypeRequest("D002784", MeshCategory.LIGAND);
@@ -94,5 +111,41 @@ class MeshOntologyControllerTest {
         assertEquals("D002784", entity.meshId());
         assertEquals(MeshCategory.LIGAND, entity.type());
         assertFalse(entity.isType());
+    }
+
+    @Test
+    void shouldReturn200WithAllCategoriesWhenCheckAllTypesIsCalled() {
+        SearchMeshIdBySynonyms searchPort = synonyms -> Optional.empty();
+        CheckMeshTermType checkTypePort = new CheckMeshTermType() {
+            @Override
+            public boolean execute(String meshId, MeshCategory targetType) {
+                return targetType == MeshCategory.ENZYME;
+            }
+
+            @Override
+            public Map<MeshCategory, Boolean> executeAll(String meshId) {
+                return Map.of(
+                        MeshCategory.ENZYME, true,
+                        MeshCategory.PROTEIN, true,
+                        MeshCategory.RECEPTOR, false,
+                        MeshCategory.LIGAND, false,
+                        MeshCategory.TRANSCRIPTION_FACTOR, false,
+                        MeshCategory.ADAPTOR_PROTEIN, false
+                );
+            }
+        };
+        MeshOntologyController controller = new MeshOntologyController(obj -> {}, searchPort, checkTypePort, Runnable::run);
+
+        CheckAllMeshTypesRequest request = new CheckAllMeshTypesRequest("D002785");
+        Response response = controller.checkAllTypes(request);
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertNotNull(response.getEntity());
+        assertTrue(response.getEntity() instanceof CheckAllMeshTypesResponse);
+        CheckAllMeshTypesResponse entity = (CheckAllMeshTypesResponse) response.getEntity();
+        assertEquals("D002785", entity.meshId());
+        assertEquals(6, entity.categories().size());
+        assertTrue(entity.categories().get(MeshCategory.ENZYME));
+        assertFalse(entity.categories().get(MeshCategory.RECEPTOR));
     }
 }

@@ -17,6 +17,10 @@ package com.biopatternsg.domain.port.in;
 
 import com.biopatternsg.domain.model.mesh.MeshCategory;
 
+import java.util.Map;
+
 public interface CheckMeshTermType {
     boolean execute(String meshId, MeshCategory targetType);
+
+    Map<MeshCategory, Boolean> executeAll(String meshId);
 }

@@ -16,9 +16,12 @@
 package com.biopatternsg.infrastructure.adapters.in.restcontrollers;
 
 import com.biopatternsg.domain.model.mesh.BiologicalObject;
+import com.biopatternsg.domain.model.mesh.MeshCategory;
 import com.biopatternsg.domain.port.in.CheckMeshTermType;
 import com.biopatternsg.domain.port.in.SearchMeshIdBySynonyms;
 import com.biopatternsg.domain.port.in.SendBiologicalObjectToQueue;
+import com.biopatternsg.infrastructure.dtos.CheckAllMeshTypesRequest;
+import com.biopatternsg.infrastructure.dtos.CheckAllMeshTypesResponse;
 import com.biopatternsg.infrastructure.dtos.CheckMeshTypeRequest;
 import com.biopatternsg.infrastructure.dtos.CheckMeshTypeResponse;
 import com.biopatternsg.infrastructure.dtos.MeshIdResponse;
@@ -37,6 +40,7 @@ import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -82,6 +86,39 @@ public class MeshOntologyController {
     public Response checkType(@Valid CheckMeshTypeRequest request) {
         boolean isType = checkMeshTermType.execute(request.meshId(), request.type());
         CheckMeshTypeResponse response = new CheckMeshTypeResponse(request.meshId(), request.type(), isType);
+        return Response.ok(response).build();
+    }
+
+    @POST
+    @Path("/check-all-types")
+    @Operation(
+            summary = "Check all MeSH node types",
+            description = "Evaluates a MeSH node against all MeshCategory values and stores the classification results in mesh_ontology."
+    )
+    @APIResponses({
+            @APIResponse(
+                    responseCode = "200",
+                    description = "Classification result with all MeshCategory values",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = CheckAllMeshTypesResponse.class)
+                    )
+            ),
+            @APIResponse(
+                    responseCode = "400",
+                    description = "Invalid request payload",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    type = SchemaType.STRING,
+                                    description = "Error message"
+                            )
+                    )
+            )
+    })
+    public Response checkAllTypes(@Valid CheckAllMeshTypesRequest request) {
+        Map<MeshCategory, Boolean> categories = checkMeshTermType.executeAll(request.meshId());
+        CheckAllMeshTypesResponse response = new CheckAllMeshTypesResponse(request.meshId(), categories);
         return Response.ok(response).build();
     }
 

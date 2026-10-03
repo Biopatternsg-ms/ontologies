@@ -32,6 +32,8 @@ class CheckMeshTermTypeUseCaseTest {
 
     private static class StubMeshOntologyRepository implements MeshOntologyRepository {
         Map<String, MeshInfo> store = new HashMap<>();
+        int updateCategoriesCount = 0;
+        int updateCategoryCount = 0;
 
         @Override
         public void save(MeshInfo meshInfo) {
@@ -58,6 +60,30 @@ class CheckMeshTermTypeUseCaseTest {
         @Override
         public Optional<MeshInfo> findBySynonymsCaseInsensitive(List<String> synonyms) {
             return Optional.empty();
+        }
+
+        @Override
+        public void updateCategories(String meshId, Map<String, Boolean> categories) {
+            updateCategoriesCount++;
+            MeshInfo info = store.get(meshId);
+            if (info != null) {
+                if (info.getCategories() == null) {
+                    info.setCategories(new HashMap<>());
+                }
+                info.getCategories().putAll(categories);
+            }
+        }
+
+        @Override
+        public void updateCategory(String meshId, String category, boolean isType) {
+            updateCategoryCount++;
+            MeshInfo info = store.get(meshId);
+            if (info != null) {
+                if (info.getCategories() == null) {
+                    info.setCategories(new HashMap<>());
+                }
+                info.getCategories().put(category, isType);
+            }
         }
     }
 
@@ -149,5 +175,143 @@ class CheckMeshTermTypeUseCaseTest {
         assertFalse(useCase.execute("D002784", MeshCategory.PROTEIN));
         assertFalse(useCase.execute("D002784", MeshCategory.ENZYME));
         assertFalse(useCase.execute("D002784", MeshCategory.LIGAND));
+    }
+
+    @Test
+    void shouldUpdateCategoryWhenExecuteIsCalled() {
+        stubRepository.save(createTerm("D002785", "Cholesterol 7-alpha-Hydroxylase", List.of("CYP7A1"), List.of("D004798")));
+        stubRepository.save(createTerm("D004798", "Enzymes and Enzyme Coenzymes", List.of("Enzymes"), List.of("D000602")));
+        stubRepository.save(createTerm("D000602", "Amino Acids, Peptides, and Proteins", List.of("Proteins"), List.of()));
+
+        assertTrue(useCase.execute("D002785", MeshCategory.ENZYME));
+
+        MeshInfo updated = stubRepository.findByMeshId("D002785").orElseThrow();
+        assertNotNull(updated.getCategories());
+        assertTrue(updated.getCategories().get(MeshCategory.ENZYME.name()));
+    }
+
+    @Test
+    void shouldExecuteAllAndSaveAllCategories() {
+        stubRepository.save(createTerm("D002785", "Cholesterol 7-alpha-Hydroxylase", List.of("CYP7A1"), List.of("D004798")));
+        stubRepository.save(createTerm("D004798", "Enzymes and Enzyme Coenzymes", List.of("Enzymes"), List.of("D000602")));
+        stubRepository.save(createTerm("D000602", "Amino Acids, Peptides, and Proteins", List.of("Proteins"), List.of()));
+
+        Map<MeshCategory, Boolean> results = useCase.executeAll("D002785");
+
+        assertEquals(MeshCategory.values().length, results.size());
+        assertTrue(results.get(MeshCategory.ENZYME));
+        assertTrue(results.get(MeshCategory.PROTEIN));
+        assertFalse(results.get(MeshCategory.RECEPTOR));
+        assertFalse(results.get(MeshCategory.LIGAND));
+        assertFalse(results.get(MeshCategory.TRANSCRIPTION_FACTOR));
+        assertFalse(results.get(MeshCategory.ADAPTOR_PROTEIN));
+
+        MeshInfo saved = stubRepository.findByMeshId("D002785").orElseThrow();
+        assertNotNull(saved.getCategories());
+        assertEquals(MeshCategory.values().length, saved.getCategories().size());
+        assertTrue(saved.getCategories().get("ENZYME"));
+        assertTrue(saved.getCategories().get("PROTEIN"));
+        assertFalse(saved.getCategories().get("RECEPTOR"));
+        assertFalse(saved.getCategories().get("LIGAND"));
+        assertFalse(saved.getCategories().get("TRANSCRIPTION_FACTOR"));
+        assertFalse(saved.getCategories().get("ADAPTOR_PROTEIN"));
+
+        // Verify single atomic write: exactly 1 batch update, 0 individual category updates
+        assertEquals(0, stubRepository.updateCategoryCount);
+        assertEquals(1, stubRepository.updateCategoriesCount);
+    }
+
+    @Test
+    void shouldReturnEmptyMapForExecuteAllWhenInputIsBlankOrNull() {
+        assertTrue(useCase.executeAll(null).isEmpty());
+        assertTrue(useCase.executeAll("").isEmpty());
+        assertTrue(useCase.executeAll("   ").isEmpty());
+        assertEquals(0, stubRepository.updateCategoriesCount);
+    }
+
+    @Test
+    void shouldReturnCachedDataWhenAlreadySavedInMeshOntology() {
+        Map<String, Boolean> precomputed = new HashMap<>();
+        for (MeshCategory cat : MeshCategory.values()) {
+            precomputed.put(cat.name(), cat == MeshCategory.LIGAND);
+        }
+
+        MeshInfo termWithCategories = MeshInfo.builder()
+                .meshId("D007371")
+                .name("Interferon-gamma")
+                .synonyms(List.of("IFN-gamma"))
+                .parents(List.of("D036341"))
+                .categories(precomputed)
+                .build();
+        stubRepository.save(termWithCategories);
+
+        Map<MeshCategory, Boolean> results = useCase.executeAll("D007371");
+
+        assertEquals(MeshCategory.values().length, results.size());
+        assertTrue(results.get(MeshCategory.LIGAND));
+        assertFalse(results.get(MeshCategory.PROTEIN)); // saved as false in precomputed, should return cached
+        assertEquals(0, stubRepository.updateCategoriesCount); // No DB write when all cached
+    }
+
+    @Test
+    void shouldReturnCachedCategoryForExecuteWhenAlreadySaved() {
+        Map<String, Boolean> precomputed = new HashMap<>();
+        precomputed.put(MeshCategory.PROTEIN.name(), true);
+
+        MeshInfo termWithCategories = MeshInfo.builder()
+                .meshId("D99999")
+                .name("Some Term")
+                .synonyms(List.of())
+                .parents(List.of())
+                .categories(precomputed)
+                .build();
+        stubRepository.save(termWithCategories);
+
+        // Even without parents or matches, cached true should be returned directly
+        assertTrue(useCase.execute("D99999", MeshCategory.PROTEIN));
+        assertEquals(0, stubRepository.updateCategoryCount); // No DB write when already cached
+    }
+
+    @Test
+    void shouldReturnFalseAndNotUpdateDatabaseWhenTermDoesNotExistInExecute() {
+        assertFalse(useCase.execute("NON_EXISTENT", MeshCategory.PROTEIN));
+        assertEquals(0, stubRepository.updateCategoryCount);
+    }
+
+    @Test
+    void shouldReturnAllFalseAndNotUpdateDatabaseWhenTermDoesNotExistInExecuteAll() {
+        Map<MeshCategory, Boolean> results = useCase.executeAll("NON_EXISTENT");
+
+        assertEquals(MeshCategory.values().length, results.size());
+        results.values().forEach(isType -> assertFalse(isType));
+        assertEquals(0, stubRepository.updateCategoriesCount);
+    }
+
+    @Test
+    void shouldOnlyEvaluateMissingCategoriesWhenPartialCacheExists() {
+        // Pre-cache only ENZYME=true
+        Map<String, Boolean> partialCache = new HashMap<>();
+        partialCache.put(MeshCategory.ENZYME.name(), true);
+
+        MeshInfo term = MeshInfo.builder()
+                .meshId("D002785")
+                .name("Cholesterol 7-alpha-Hydroxylase")
+                .synonyms(List.of("CYP7A1"))
+                .parents(List.of("D000602"))
+                .categories(partialCache)
+                .build();
+        stubRepository.save(term);
+        stubRepository.save(createTerm("D000602", "Amino Acids, Peptides, and Proteins", List.of("Proteins"), List.of()));
+
+        Map<MeshCategory, Boolean> results = useCase.executeAll("D002785");
+
+        assertEquals(MeshCategory.values().length, results.size());
+        assertTrue(results.get(MeshCategory.ENZYME)); // from partial cache
+        assertTrue(results.get(MeshCategory.PROTEIN)); // from BFS evaluation
+        assertFalse(results.get(MeshCategory.RECEPTOR));
+
+        // Atomic write saved the complete categories map
+        assertEquals(0, stubRepository.updateCategoryCount);
+        assertEquals(1, stubRepository.updateCategoriesCount);
     }
 }

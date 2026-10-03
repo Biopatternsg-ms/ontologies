@@ -13,22 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.biopatternsg.domain.model.mesh;
+package com.biopatternsg.infrastructure.dtos;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import com.biopatternsg.domain.model.mesh.MeshCategory;
 
-import java.util.List;
 import java.util.Map;
 
-@Builder
-@Getter
-@Setter
-public class MeshInfo {
-    private String meshId;
-    private String name;
-    private List<String> synonyms;
-    private List<String> parents;
-    private Map<String, Boolean> categories;
+public record CheckAllMeshTypesResponse(
+        String meshId,
+        Map<MeshCategory, Boolean> categories
+) {
 }

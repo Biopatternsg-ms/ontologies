@@ -21,6 +21,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.Map;
 
 @Setter
 @Getter
@@ -30,4 +31,5 @@ public class MeshTermCollection extends PanacheMongoEntity {
     private String name;
     private List<String> synonyms;
     private List<String> parents;
+    private Map<String, Boolean> categories;
 }
