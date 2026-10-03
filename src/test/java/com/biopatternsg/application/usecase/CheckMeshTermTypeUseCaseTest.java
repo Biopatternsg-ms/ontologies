@@ -67,10 +67,12 @@ class CheckMeshTermTypeUseCaseTest {
             updateCategoriesCount++;
             MeshInfo info = store.get(meshId);
             if (info != null) {
-                if (info.getCategories() == null) {
-                    info.setCategories(new HashMap<>());
+                Map<String, Boolean> updated = new HashMap<>();
+                if (info.getCategories() != null) {
+                    updated.putAll(info.getCategories());
                 }
-                info.getCategories().putAll(categories);
+                updated.putAll(categories);
+                info.setCategories(updated);
             }
         }
 
@@ -79,10 +81,12 @@ class CheckMeshTermTypeUseCaseTest {
             updateCategoryCount++;
             MeshInfo info = store.get(meshId);
             if (info != null) {
-                if (info.getCategories() == null) {
-                    info.setCategories(new HashMap<>());
+                Map<String, Boolean> updated = new HashMap<>();
+                if (info.getCategories() != null) {
+                    updated.putAll(info.getCategories());
                 }
-                info.getCategories().put(category, isType);
+                updated.put(category, isType);
+                info.setCategories(updated);
             }
         }
     }
