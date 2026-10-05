@@ -64,7 +64,7 @@ public class SearchMeshIdBySynonymsUseCase implements SearchMeshIdBySynonyms {
             return Optional.of(meshId);
         }
 
-        log.info("No matching MeSH term found for provided synonyms");
+        log.info("No matching MeSH term found for provided synonyms: {}", cleanSynonyms);
         return Optional.empty();
     }
 }
