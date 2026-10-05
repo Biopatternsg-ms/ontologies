@@ -23,11 +23,13 @@ import com.mongodb.client.model.Updates;
 import io.quarkus.mongodb.panache.PanacheMongoRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 
+import org.bson.conversions.Bson;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 @ApplicationScoped
 public class MeshOntologyRepositoryAdapter implements MeshOntologyRepository, PanacheMongoRepository<MeshTermCollection> {
@@ -58,18 +60,24 @@ public class MeshOntologyRepositoryAdapter implements MeshOntologyRepository, Pa
             return Optional.empty();
         }
 
-        List<Pattern> regexList = synonyms.stream()
+        List<Bson> filters = synonyms.stream()
                 .filter(Objects::nonNull)
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
-                .map(s -> Pattern.compile("^" + Pattern.quote(s) + "$", Pattern.CASE_INSENSITIVE))
+                .flatMap(s -> {
+                    Pattern pattern = Pattern.compile("^" + Pattern.quote(s) + "$", Pattern.CASE_INSENSITIVE);
+                    return Stream.of(
+                            Filters.regex("name", pattern),
+                            Filters.regex("synonyms", pattern)
+                    );
+                })
                 .toList();
 
-        if (regexList.isEmpty()) {
+        if (filters.isEmpty()) {
             return Optional.empty();
         }
 
-        return find("{$or: [{synonyms: {$in: ?1}}, {name: {$in: ?1}}]}", regexList).firstResultOptional().map(this::toModel);
+        return find(Filters.or(filters)).firstResultOptional().map(this::toModel);
     }
 
     @Override
