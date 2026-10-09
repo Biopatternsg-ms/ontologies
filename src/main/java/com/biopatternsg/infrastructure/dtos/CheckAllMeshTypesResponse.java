@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.biopatternsg.domain.port.in;
+package com.biopatternsg.infrastructure.dtos;
 
 import com.biopatternsg.domain.model.mesh.MeshCategory;
 
 import java.util.Map;
 
-public interface CheckMeshTermType {
-    boolean execute(String meshId, MeshCategory targetType);
-
-    Map<MeshCategory, Boolean> executeAll(String meshId);
+public record CheckAllMeshTypesResponse(
+        String meshId,
+        Map<MeshCategory, Boolean> categories
+) {
 }

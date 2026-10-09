@@ -19,7 +19,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Builder
 @Getter
@@ -29,4 +32,13 @@ public class MeshInfo {
     private String name;
     private List<String> synonyms;
     private List<String> parents;
+    private Map<String, Boolean> categories;
+
+    public Map<String, Boolean> getCategories() {
+        return categories != null ? Collections.unmodifiableMap(categories) : null;
+    }
+
+    public void setCategories(Map<String, Boolean> categories) {
+        this.categories = categories != null ? new HashMap<>(categories) : null;
+    }
 }
