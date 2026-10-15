@@ -22,8 +22,11 @@ import com.biopatternsg.infrastructure.clients.external_clients.MeshOntologyHttp
 import com.biopatternsg.infrastructure.external_services.QueryMesh;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
+import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -38,13 +41,18 @@ public class QueryMeshImpl implements QueryMesh {
         this.meshHttpClient = meshHttpClient;
     }
 
-    //TODO: Agregar lib de reciliencia
     @Override
+    @Retry(maxRetries = 3, delay = 1000, delayUnit = ChronoUnit.MILLIS, jitter = 200, jitterDelayUnit = ChronoUnit.MILLIS)
     public List<String> getTermIds(String biologicalObjectName) {
+        if (biologicalObjectName == null || biologicalObjectName.isBlank()) {
+            return Collections.emptyList();
+        }
+
         try {
             Thread.sleep(500);
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            Thread.currentThread().interrupt();
+            return Collections.emptyList();
         }
 
         ESearchResult result = meshHttpClient.search(
@@ -52,20 +60,34 @@ public class QueryMeshImpl implements QueryMesh {
                 biologicalObjectName,
                 10,
                 "biomed3"
-            );
+        );
+
+        if (result == null || result.getIdList() == null || result.getIdList().getIds() == null) {
+            return Collections.emptyList();
+        }
 
         return result.getIdList().getIds();
     }
 
     @Override
+    @Retry(maxRetries = 3, delay = 1000, delayUnit = ChronoUnit.MILLIS, jitter = 200, jitterDelayUnit = ChronoUnit.MILLIS)
     public SummaryMesh getSummarySynonyms(String meshTermId) {
+        if (meshTermId == null || meshTermId.isBlank()) {
+            return SummaryMesh.builder().parents(Set.of()).meshSynonyms(Set.of()).build();
+        }
+
         try {
             Thread.sleep(500);
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            Thread.currentThread().interrupt();
+            return SummaryMesh.builder().parents(Set.of()).meshSynonyms(Set.of()).build();
         }
 
         ESummaryResult result = meshHttpClient.summary("mesh", meshTermId);
+
+        if (result == null || result.getDocSum() == null || result.getDocSum().getItems() == null) {
+            return SummaryMesh.builder().parents(Set.of()).meshSynonyms(Set.of()).build();
+        }
 
         Set<String> allParents = result.getDocSum().getItems().stream()
                 .filter(it -> "DS_IdxLinks".equals(it.getName()))

@@ -37,6 +37,19 @@ public class SendBiologicalObjectToQueueUseCase implements SendBiologicalObjectT
 
     @Override
     public void execute(BiologicalObject biologicalObject) {
+        if (biologicalObject == null) {
+            return;
+        }
+
+        if ((biologicalObject.getName() == null || biologicalObject.getName().isBlank())
+                && biologicalObject.getSymbol() != null && !biologicalObject.getSymbol().isBlank()) {
+            biologicalObject.setName(biologicalObject.getSymbol());
+        }
+
+        if (biologicalObject.getName() == null || biologicalObject.getName().isBlank()) {
+            log.warn("Biological object has no name or symbol (id: {})", biologicalObject.getId());
+            return;
+        }
 
         if (isSavedName(biologicalObject.getName()) || isSavedSynonyms(biologicalObject.getSynonyms())) {
             log.info("Mesh tree for {} already exists", biologicalObject.getName());
@@ -47,11 +60,17 @@ public class SendBiologicalObjectToQueueUseCase implements SendBiologicalObjectT
     }
 
     private boolean isSavedSynonyms(List<String> synonyms) {
+        if (synonyms == null || synonyms.isEmpty()) {
+            return false;
+        }
         Optional<MeshInfo> bySynonyms = meshOntologyRepository.findBySynonyms(synonyms);
         return bySynonyms.isPresent();
     }
 
     boolean isSavedName(String name) {
+        if (name == null || name.isBlank()) {
+            return false;
+        }
         Optional<MeshInfo> byName = meshOntologyRepository.findByName(name);
         return byName.isPresent();
     }

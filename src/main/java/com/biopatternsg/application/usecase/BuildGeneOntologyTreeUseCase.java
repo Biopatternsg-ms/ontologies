@@ -19,12 +19,14 @@ import com.biopatternsg.application.services.GeneOntologyTermService;
 import com.biopatternsg.domain.model.GeneOntologyBuildTreeRequest;
 import com.biopatternsg.domain.model.GoTerm;
 import com.biopatternsg.domain.model.PathToRoot;
+import com.biopatternsg.domain.model.PathsToRoot;
 import com.biopatternsg.domain.port.in.BuildGeneOntologyTree;
 import com.biopatternsg.domain.port.out.repositories.GeneOntologyTermRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -33,6 +35,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @ApplicationScoped
 public class BuildGeneOntologyTreeUseCase implements BuildGeneOntologyTree {
+
+    private static final Set<String> ROOT_GO_IDS = Set.of("GO:0008150", "GO:0003674", "GO:0005575");
 
     private final GeneOntologyTermService geneOntologyTermService;
     private final GeneOntologyTermRepository goTermRepository;
@@ -62,16 +66,30 @@ public class BuildGeneOntologyTreeUseCase implements BuildGeneOntologyTree {
     }
 
     private List<GoTerm.ParentRelation> getParentRelations(String newGoTermId) {
-        List<List<PathToRoot>> newGoTermPathsToRoots = geneOntologyTermService.getPathsToRoot(newGoTermId).getResults();
+        if (newGoTermId == null || ROOT_GO_IDS.contains(newGoTermId)) {
+            return Collections.emptyList();
+        }
 
-        Set<PathToRoot> flatNewGoTermPathsToRoots = newGoTermPathsToRoots.stream()
-                .flatMap(List::stream)
-                .filter(pathToRoot -> pathToRoot.getChild().equals(newGoTermId))
-                .collect(Collectors.toSet());
+        try {
+            PathsToRoot pathsToRoot = geneOntologyTermService.getPathsToRoot(newGoTermId);
+            if (pathsToRoot == null || pathsToRoot.getResults() == null) {
+                return Collections.emptyList();
+            }
 
-        return flatNewGoTermPathsToRoots.stream()
-                .map(a -> new GoTerm.ParentRelation(a.getParent(), a.getRelationship()))
-                .toList();
+            List<List<PathToRoot>> newGoTermPathsToRoots = pathsToRoot.getResults();
+
+            Set<PathToRoot> flatNewGoTermPathsToRoots = newGoTermPathsToRoots.stream()
+                    .flatMap(List::stream)
+                    .filter(pathToRoot -> pathToRoot != null && newGoTermId.equals(pathToRoot.getChild()))
+                    .collect(Collectors.toSet());
+
+            return flatNewGoTermPathsToRoots.stream()
+                    .map(a -> new GoTerm.ParentRelation(a.getParent(), a.getRelationship()))
+                    .toList();
+        } catch (Exception e) {
+            log.warn("Could not retrieve paths to root for GO term {}: {}", newGoTermId, e.getMessage());
+            return Collections.emptyList();
+        }
     }
 
     private List<String> getNewGOTermIds(GeneOntologyBuildTreeRequest geneOntology) {
