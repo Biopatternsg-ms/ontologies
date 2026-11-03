@@ -24,7 +24,9 @@ import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -54,6 +56,10 @@ public class QueryMeshImpl implements QueryMesh {
                 "biomed3"
             );
 
+        if (result == null || result.getIdList() == null || result.getIdList().getIds() == null) {
+            return Collections.emptyList();
+        }
+
         return result.getIdList().getIds();
     }
 
@@ -67,14 +73,25 @@ public class QueryMeshImpl implements QueryMesh {
 
         ESummaryResult result = meshHttpClient.summary("mesh", meshTermId);
 
+        if (result == null || result.getDocSum() == null || result.getDocSum().getItems() == null) {
+            return SummaryMesh.builder()
+                    .parents(Collections.emptySet())
+                    .meshSynonyms(Collections.emptySet())
+                    .build();
+        }
+
         Set<String> allParents = result.getDocSum().getItems().stream()
+                .filter(Objects::nonNull)
                 .filter(it -> "DS_IdxLinks".equals(it.getName()))
                 .flatMap(it -> it.getValuesBySubItemName("Parent").stream())
+                .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
         Set<String> itemsIds = result.getDocSum().getItems().stream()
+                .filter(Objects::nonNull)
                 .filter(it -> "DS_MeshTerms".equals(it.getName()))
                 .flatMap(it -> it.getValuesBySubItemNameOtra("string").stream())
+                .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
         return SummaryMesh.builder()
