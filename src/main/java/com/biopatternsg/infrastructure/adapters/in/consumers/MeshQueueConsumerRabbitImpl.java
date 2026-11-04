@@ -15,9 +15,10 @@
  */
 package com.biopatternsg.infrastructure.adapters.in.consumers;
 
-import com.biopatternsg.domain.port.in.BuildMeshOntologyTree;
 import com.biopatternsg.domain.model.mesh.BiologicalObject;
+import com.biopatternsg.domain.port.in.BuildMeshOntologyTree;
 import com.biopatternsg.domain.port.out.consumers.MeshQueueConsumer;
+import io.smallrye.reactive.messaging.annotations.Blocking;
 import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
@@ -32,10 +33,15 @@ public class MeshQueueConsumerRabbitImpl implements MeshQueueConsumer {
     private final BuildMeshOntologyTree buildMeshOntologyTree;
 
     @Incoming("ncbi-in")
+    @Blocking
     @Override
     public void consumer(JsonObject jsonMsg) {
-        BiologicalObject biologicalObject = jsonMsg.mapTo(BiologicalObject.class);
-        buildMeshOntologyTree.execute(biologicalObject);
+        try {
+            BiologicalObject biologicalObject = jsonMsg.mapTo(BiologicalObject.class);
+            buildMeshOntologyTree.execute(biologicalObject);
+        } catch (Exception e) {
+            log.error("Error processing message from mesh-queue: {}", jsonMsg, e);
+        }
     }
 
 }
