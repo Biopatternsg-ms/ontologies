@@ -36,9 +36,18 @@ public class MeshQueueConsumerRabbitImpl implements MeshQueueConsumer {
     @Blocking
     @Override
     public void consumer(JsonObject jsonMsg) {
+        log.info("Message received from mesh-queue: {}", jsonMsg);
         try {
             BiologicalObject biologicalObject = jsonMsg.mapTo(BiologicalObject.class);
+            log.info("Consuming BiologicalObject from mesh-queue: id={}, name={}, symbol={}, synonyms={}",
+                    biologicalObject.getId(),
+                    biologicalObject.getName(),
+                    biologicalObject.getSymbol(),
+                    biologicalObject.getSynonyms());
             buildMeshOntologyTree.execute(biologicalObject);
+            log.info("Finished processing BiologicalObject from mesh-queue: id={}, name={}",
+                    biologicalObject.getId(),
+                    biologicalObject.getName());
         } catch (Exception e) {
             log.error("Error processing message from mesh-queue: {}", jsonMsg, e);
         }
