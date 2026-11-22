@@ -26,7 +26,12 @@ import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.Stack;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -40,6 +45,21 @@ public class BuildMeshOntologyTreeUseCase implements BuildMeshOntologyTree {
 
     @Override
     public void execute(BiologicalObject biologicalObject) {
+        if (biologicalObject == null) {
+            log.warn("Received null BiologicalObject in BuildMeshOntologyTreeUseCase");
+            return;
+        }
+
+        if (biologicalObject.getName() == null || biologicalObject.getName().isBlank()) {
+            if (biologicalObject.getSymbol() != null && !biologicalObject.getSymbol().isBlank()) {
+                biologicalObject.setName(biologicalObject.getSymbol().trim());
+            } else {
+                log.warn("Skipping building tree mesh for biologicalObject id={}: name and symbol are null or blank",
+                        biologicalObject.getId());
+                return;
+            }
+        }
+
         log.info("Start building tree mesh: {}", biologicalObject.getName());
 
         List<String> meshTermIds = meshOntologyService.getMeshTermIds(biologicalObject.getName());
@@ -72,12 +92,16 @@ public class BuildMeshOntologyTreeUseCase implements BuildMeshOntologyTree {
             List<String> currentTermParents = currentSummaryMesh.getParents().stream().toList();
 
             List<String> currentSynonyms = currentSummaryMesh.getMeshSynonyms().stream().toList();
+            String currentName = currentSynonyms.isEmpty() ? currentTermId : currentSynonyms.getFirst();
+            List<String> remainingSynonyms = currentSynonyms.size() > 1
+                    ? currentSynonyms.subList(1, currentSynonyms.size())
+                    : Collections.emptyList();
 
             MeshInfo meshInfoToSave = MeshInfo.builder()
                     .meshId(currentTermId)
-                    .name(currentSynonyms.getFirst())
+                    .name(currentName)
                     .parents(currentTermParents)
-                    .synonyms(currentSynonyms.subList(1, currentSynonyms.size()))
+                    .synonyms(remainingSynonyms)
                     .build();
 
             saveMechTerm(meshInfoToSave);
@@ -85,7 +109,6 @@ public class BuildMeshOntologyTreeUseCase implements BuildMeshOntologyTree {
 
             currentTermParents.forEach(termIdsStack::push);
         }
-
 
         log.info("End building tree mesh: {}", biologicalObject.getName());
     }
@@ -103,7 +126,7 @@ public class BuildMeshOntologyTreeUseCase implements BuildMeshOntologyTree {
                 return Optional.empty();
             }
 
-            if (containSynonym){
+            if (containSynonym) {
                 List<String> synonyms = summary.getMeshSynonyms().stream().toList();
 
                 return Optional.of(

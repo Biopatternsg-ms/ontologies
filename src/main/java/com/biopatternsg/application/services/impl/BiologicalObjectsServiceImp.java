@@ -31,7 +31,11 @@ public class BiologicalObjectsServiceImp implements BiologicalObjectsService {
 
     @Override
     public void updateMeshId(String biologicalObjectId, String meshId) {
-        Response response = biologicalObjectsRepository.updateMeshId(biologicalObjectId, meshId);
-        log.info(response.readEntity(String.class));
+        try (Response response = biologicalObjectsRepository.updateMeshId(biologicalObjectId, meshId)) {
+            if (response != null) {
+                log.info("Update meshId={} for biologicalObject={} finished with status={}",
+                        meshId, biologicalObjectId, response.getStatus());
+            }
+        }
     }
 }
