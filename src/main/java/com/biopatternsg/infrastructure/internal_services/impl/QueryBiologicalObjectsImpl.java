@@ -37,9 +37,9 @@ public class QueryBiologicalObjectsImpl implements QueryBiologicalObjects {
     @Override
     public Response updateMeshId(String biologicalObjectId, String meshId) {
         try {
-            return biologicalObjectsHttpClient.buildMeshOntologyTree(new UpdateMeshIdRequest(biologicalObjectId, meshId));
+            return biologicalObjectsHttpClient.updateMeshId(new UpdateMeshIdRequest(biologicalObjectId, meshId));
         } catch (Exception e) {
-            log.error("Error updating mesh MeshId for biological object {}: {}",
+            log.error("Error updating meshId for biological object {}: {}",
                     LogSanitizer.sanitize(biologicalObjectId), LogSanitizer.sanitize(e.getMessage()));
             return Response.serverError().build();
         }

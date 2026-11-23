@@ -20,12 +20,15 @@ import com.biopatternsg.domain.model.mesh.MeshCategory;
 import com.biopatternsg.domain.port.in.CheckMeshTermType;
 import com.biopatternsg.domain.port.in.SearchMeshIdBySynonyms;
 import com.biopatternsg.domain.port.in.SendBiologicalObjectToQueue;
+import com.biopatternsg.infrastructure.dtos.BuildMeshTreeRequest;
 import com.biopatternsg.infrastructure.dtos.CheckAllMeshTypesRequest;
 import com.biopatternsg.infrastructure.dtos.CheckAllMeshTypesResponse;
 import com.biopatternsg.infrastructure.dtos.CheckMeshTypeRequest;
 import com.biopatternsg.infrastructure.dtos.CheckMeshTypeResponse;
 import com.biopatternsg.infrastructure.dtos.MeshIdResponse;
+import com.biopatternsg.infrastructure.dtos.MessageResponse;
 import com.biopatternsg.infrastructure.dtos.SearchMeshIdRequest;
+import com.biopatternsg.infrastructure.mapper.OntologyRequestMapper;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
@@ -142,10 +145,7 @@ public class MeshOntologyController {
                     description = "MeSH term not found for provided synonyms",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(
-                                    type = SchemaType.STRING,
-                                    description = "Not found error message"
-                            )
+                            schema = @Schema(implementation = MessageResponse.class)
                     )
             )
     })
@@ -154,9 +154,7 @@ public class MeshOntologyController {
 
         return meshIdOptional
                 .map(meshId -> Response.ok(new MeshIdResponse(meshId)).build())
-                .orElseGet(() -> Response.status(Response.Status.NOT_FOUND)
-                        .entity("{\"message\": \"MeSH term not found for provided synonyms\"}")
-                        .build());
+                .orElseGet(this::buildMeshNotFoundResponse);
     }
 
     @POST
@@ -171,10 +169,7 @@ public class MeshOntologyController {
                     description = "Biological object successfully queued for processing",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(
-                                    type = SchemaType.STRING,
-                                    description = "Success message"
-                            )
+                            schema = @Schema(implementation = MessageResponse.class)
                     )
             ),
             @APIResponse(
@@ -189,19 +184,27 @@ public class MeshOntologyController {
                     )
             )
     })
-    public Response buildTreeMesh(@Valid BiologicalObject biologicalObjects) {
-
-        CompletableFuture.runAsync(() -> {
-            try {
-                sendBiologicalObjectToQueue.execute(biologicalObjects);
-            } catch (Exception e) {
-                log.error("Error building mesh ontology tree", e);
-            }
-        }, executor);
+    public Response buildTreeMesh(@Valid BuildMeshTreeRequest request) {
+        BiologicalObject biologicalObject = OntologyRequestMapper.requestToModel(request);
+        CompletableFuture.runAsync(() -> runSendBiologicalObjectToQueue(biologicalObject), executor);
 
         return Response.accepted()
-                .entity("{\"message\": \"Buildind mesh tree\"}")
+                .entity(new MessageResponse("Building mesh tree"))
                 .build();
+    }
+
+    private Response buildMeshNotFoundResponse() {
+        return Response.status(Response.Status.NOT_FOUND)
+                .entity(new MessageResponse("MeSH term not found for provided synonyms"))
+                .build();
+    }
+
+    private void runSendBiologicalObjectToQueue(BiologicalObject biologicalObject) {
+        try {
+            sendBiologicalObjectToQueue.execute(biologicalObject);
+        } catch (Exception e) {
+            log.error("Error building mesh ontology tree", e);
+        }
     }
 
 }
