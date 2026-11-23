@@ -15,12 +15,17 @@
  */
 package com.biopatternsg.infrastructure.mapper;
 
-import com.biopatternsg.infrastructure.mongo.GoTermCollection;
 import com.biopatternsg.domain.model.GoTerm;
+import com.biopatternsg.domain.model.PathToRoot;
+import com.biopatternsg.domain.model.PathsToRoot;
 import com.biopatternsg.infrastructure.external_services.dto.go.GoTermResponse;
+import com.biopatternsg.infrastructure.external_services.dto.go.PathToRootResponse;
+import com.biopatternsg.infrastructure.external_services.dto.go.PathsToRootResponse;
+import com.biopatternsg.infrastructure.mongo.GoTermCollection;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -139,5 +144,39 @@ public class GoTermMapper {
         }
 
         return entity;
+    }
+
+    public PathsToRoot toPathsToRoot(PathsToRootResponse response) {
+        if (response == null) {
+            return PathsToRoot.builder()
+                    .numberOfHits(0)
+                    .results(List.of())
+                    .build();
+        }
+        List<List<PathToRoot>> mappedResults = response.results() == null
+                ? List.of()
+                : response.results().stream()
+                        .filter(Objects::nonNull)
+                        .map(this::mapPathGroup)
+                        .toList();
+        return PathsToRoot.builder()
+                .numberOfHits(response.numberOfHits())
+                .results(mappedResults)
+                .build();
+    }
+
+    private List<PathToRoot> mapPathGroup(List<PathToRootResponse> group) {
+        return group.stream()
+                .filter(Objects::nonNull)
+                .map(this::mapPathToRoot)
+                .toList();
+    }
+
+    private PathToRoot mapPathToRoot(PathToRootResponse dto) {
+        return PathToRoot.builder()
+                .child(dto.child())
+                .parent(dto.parent())
+                .relationship(dto.relationship())
+                .build();
     }
 }

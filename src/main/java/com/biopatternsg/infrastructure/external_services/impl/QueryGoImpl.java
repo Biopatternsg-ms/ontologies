@@ -15,10 +15,10 @@
  */
 package com.biopatternsg.infrastructure.external_services.impl;
 
-import com.biopatternsg.domain.model.PathsToRoot;
 import com.biopatternsg.infrastructure.clients.external_clients.GeneOntologyHttpClient;
 import com.biopatternsg.infrastructure.external_services.QueryGO;
 import com.biopatternsg.infrastructure.external_services.dto.go.GoTermResponse;
+import com.biopatternsg.infrastructure.external_services.dto.go.PathsToRootResponse;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -35,7 +35,7 @@ public class QueryGoImpl implements QueryGO {
     }
 
     @Override
-    public PathsToRoot getPathsToRoot(String goId) {
+    public PathsToRootResponse getPathsToRoot(String goId) {
         return goHttpClient.getPathsToRoot(goId);
     }
 

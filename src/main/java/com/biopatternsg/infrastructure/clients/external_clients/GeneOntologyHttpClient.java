@@ -15,8 +15,8 @@
  */
 package com.biopatternsg.infrastructure.clients.external_clients;
 
-import com.biopatternsg.domain.model.PathsToRoot;
 import com.biopatternsg.infrastructure.external_services.dto.go.GoTermResponse;
+import com.biopatternsg.infrastructure.external_services.dto.go.PathsToRootResponse;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -28,7 +28,7 @@ public interface GeneOntologyHttpClient {
 
     @GET
     @Path("/{goId}/paths/GO:0008150;GO:0003674;GO:0005575")
-    PathsToRoot getPathsToRoot(@PathParam("goId") String goId);
+    PathsToRootResponse getPathsToRoot(@PathParam("goId") String goId);
 
     @GET
     @Path("/{goIdList}")

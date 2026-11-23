@@ -38,7 +38,7 @@ public class GOAdapter implements GeneOntologyTermRepoWeb {
 
     @Override
     public PathsToRoot getPathsToRoot(String goId) {
-        return queryGO.getPathsToRoot(goId);
+        return goTermMapper.toPathsToRoot(queryGO.getPathsToRoot(goId));
     }
 
     @Override

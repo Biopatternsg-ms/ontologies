@@ -18,11 +18,8 @@ package com.biopatternsg.application.services.impl;
 import com.biopatternsg.application.services.BiologicalObjectsService;
 import com.biopatternsg.domain.port.out.external_repositories.BiologicalObjectsRepository;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @RequiredArgsConstructor
 @ApplicationScoped
 public class BiologicalObjectsServiceImp implements BiologicalObjectsService {
@@ -31,11 +28,6 @@ public class BiologicalObjectsServiceImp implements BiologicalObjectsService {
 
     @Override
     public void updateMeshId(String biologicalObjectId, String meshId) {
-        try (Response response = biologicalObjectsRepository.updateMeshId(biologicalObjectId, meshId)) {
-            if (response != null) {
-                log.info("Update meshId={} for biologicalObject={} finished with status={}",
-                        meshId, biologicalObjectId, response.getStatus());
-            }
-        }
+        biologicalObjectsRepository.updateMeshId(biologicalObjectId, meshId);
     }
 }

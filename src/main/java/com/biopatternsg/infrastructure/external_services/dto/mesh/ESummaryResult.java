@@ -13,14 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.biopatternsg.domain.model.mesh;
+package com.biopatternsg.infrastructure.external_services.dto.mesh;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import org.w3c.dom.Element;
-import jakarta.xml.bind.annotation.*;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlAnyElement;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlMixed;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
 import lombok.Setter;
+import org.w3c.dom.Element;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,61 +66,50 @@ public class ESummaryResult {
         @XmlMixed
         private List<Object> content = new ArrayList<>();
 
-        public List<String> getSubItemValues() {
-            List<String> values = new ArrayList<>();
-            if (content == null) return values;
-
-            for (Object obj : content) {
-                if (obj instanceof Element element) {
-                    String textValue = element.getFirstChild().getNodeValue();
-                    if (textValue != null && !textValue.isBlank()) {
-                        values.add(textValue.trim());
-                    }
-                }
-            }
-            return values;
-        }
-
         public List<String> getValuesBySubItemName(String subItemName) {
             List<String> values = new ArrayList<>();
+            if (content == null || subItemName == null) {
+                return values;
+            }
             for (Object obj : content) {
                 if (obj instanceof Element element) {
-                    // Buscamos nodos hijos que coincidan con el nombre de atributo
-                    var children = element.getElementsByTagName("Item");
-                    for (int i = 0; i < children.getLength(); i++) {
-                        Element child = (Element) children.item(i);
-                        if (subItemName.equals(child.getAttribute("Name"))) {
-                            values.add(child.getTextContent().trim());
-                        }
-                    }
+                    collectMatchingSubItemValues(element, subItemName, values);
                 }
             }
             return values;
         }
 
-        public List<String> getValuesBySubItemNameOtra(String subItemName) {
+        public List<String> getValuesBySubItemNameOrText(String subItemName) {
             List<String> values = new ArrayList<>();
+            if (content == null) {
+                return values;
+            }
             for (Object obj : content) {
                 if (obj instanceof Element element) {
                     var children = element.getElementsByTagName("Item");
-
-                    if(children.getLength() == 0){
-                        values.add(element.getTextContent().trim());
-                    }
-
-                    for (int i = 0; i < children.getLength(); i++) {
-                        Element child = (Element) children.item(i);
-                        if (subItemName.equals(child.getAttribute("Name"))) {
-                            values.add(child.getTextContent().trim());
-                        }
+                    if (children.getLength() == 0) {
+                        addTrimmedText(element.getTextContent(), values);
+                    } else if (subItemName != null) {
+                        collectMatchingSubItemValues(element, subItemName, values);
                     }
                 }
             }
             return values;
         }
 
+        private void collectMatchingSubItemValues(Element element, String subItemName, List<String> values) {
+            var children = element.getElementsByTagName("Item");
+            for (int i = 0; i < children.getLength(); i++) {
+                if (children.item(i) instanceof Element child && subItemName.equals(child.getAttribute("Name"))) {
+                    addTrimmedText(child.getTextContent(), values);
+                }
+            }
+        }
+
+        private void addTrimmedText(String text, List<String> values) {
+            if (text != null) {
+                values.add(text.trim());
+            }
+        }
     }
-
-
-
 }
