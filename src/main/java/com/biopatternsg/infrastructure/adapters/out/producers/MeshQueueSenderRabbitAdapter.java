@@ -19,20 +19,19 @@ import com.biopatternsg.domain.model.mesh.BiologicalObject;
 import com.biopatternsg.domain.port.out.producers.MeshQueueSender;
 import com.biopatternsg.shared.LogSanitizer;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 
 @Slf4j
 @ApplicationScoped
-@RequiredArgsConstructor
 public class MeshQueueSenderRabbitAdapter implements MeshQueueSender {
 
-    @Inject
-    @Channel("ncbi-out")
-    Emitter<BiologicalObject> emitter;
+    private final Emitter<BiologicalObject> emitter;
+
+    public MeshQueueSenderRabbitAdapter(@Channel("ncbi-out") Emitter<BiologicalObject> emitter) {
+        this.emitter = emitter;
+    }
 
     @Override
     public void senderBiologicalObject(BiologicalObject biologicalObject) {

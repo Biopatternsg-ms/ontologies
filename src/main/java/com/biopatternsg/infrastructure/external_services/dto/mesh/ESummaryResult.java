@@ -26,6 +26,7 @@ import jakarta.xml.bind.annotation.XmlMixed;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.w3c.dom.Element;
 
 import java.util.ArrayList;
@@ -37,6 +38,7 @@ import java.util.List;
 @XmlAccessorType(XmlAccessType.FIELD)
 @Getter
 @Setter
+@ToString
 public class ESummaryResult {
     @XmlElement(name = "DocSum")
     private DocSum docSum;
@@ -44,6 +46,7 @@ public class ESummaryResult {
     @XmlAccessorType(XmlAccessType.FIELD)
     @Getter
     @Setter
+    @ToString
     public static class DocSum {
         @XmlElement(name = "Id")
         private String id;
@@ -55,6 +58,7 @@ public class ESummaryResult {
     @XmlAccessorType(XmlAccessType.FIELD)
     @Getter
     @Setter
+    @ToString
     public static class Item {
         @XmlAttribute(name = "Name")
         private String name;

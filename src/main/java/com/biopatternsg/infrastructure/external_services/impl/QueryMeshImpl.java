@@ -46,7 +46,8 @@ public class QueryMeshImpl implements QueryMesh {
         try {
             Thread.sleep(500);
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while throttling NCBI MeSH search", e);
         }
 
         ESearchResult result = meshHttpClient.search(
@@ -68,7 +69,8 @@ public class QueryMeshImpl implements QueryMesh {
         try {
             Thread.sleep(500);
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while throttling NCBI MeSH search", e);
         }
 
         ESummaryResult result = meshHttpClient.summary("mesh", meshTermId);

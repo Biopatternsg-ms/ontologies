@@ -18,6 +18,7 @@ package com.biopatternsg.domain.model.mesh;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,6 +28,7 @@ import java.util.Map;
 @Builder
 @Getter
 @Setter
+@ToString
 public class MeshInfo {
     private String meshId;
     private String name;

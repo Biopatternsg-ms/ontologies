@@ -22,29 +22,25 @@ import com.biopatternsg.infrastructure.external_services.QueryGO;
 import com.biopatternsg.infrastructure.external_services.dto.go.GoTermResponse;
 import com.biopatternsg.infrastructure.mapper.GoTermMapper;
 import jakarta.enterprise.context.ApplicationScoped;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
 @ApplicationScoped
+@RequiredArgsConstructor
 public class GOAdapter implements GeneOntologyTermRepoWeb {
 
     private final QueryGO queryGO;
-    private final GoTermMapper goTermMapper;
-
-    public GOAdapter(QueryGO queryGO, GoTermMapper goTermMapper) {
-        this.queryGO = queryGO;
-        this.goTermMapper = goTermMapper;
-    }
 
     @Override
     public PathsToRoot getPathsToRoot(String goId) {
-        return goTermMapper.toPathsToRoot(queryGO.getPathsToRoot(goId));
+        return GoTermMapper.pathsToRootToModel(queryGO.getPathsToRoot(goId));
     }
 
     @Override
     public List<GoTerm> findGOTerms(List<String> goTermIds) {
         String joinIds = String.join(",", goTermIds);
         GoTermResponse response = queryGO.findGeneOntologies(joinIds);
-        return goTermMapper.toEntity(response);
+        return GoTermMapper.quickGoToModelList(response);
     }
 }
