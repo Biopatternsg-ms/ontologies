@@ -58,6 +58,12 @@ class SearchMeshIdBySynonymsUseCaseTest {
             this.lastPassedSynonyms = synonyms;
             return Optional.ofNullable(returnTerm);
         }
+
+        @Override
+        public void updateCategories(String meshId, java.util.Map<String, Boolean> categories) {}
+
+        @Override
+        public void updateCategory(String meshId, String category, boolean isType) {}
     }
 
     @BeforeEach

@@ -17,6 +17,7 @@ package com.biopatternsg.infrastructure.adapters.out.producers;
 
 import com.biopatternsg.domain.model.mesh.BiologicalObject;
 import com.biopatternsg.domain.port.out.producers.MeshQueueSender;
+import com.biopatternsg.shared.LogSanitizer;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.RequiredArgsConstructor;
@@ -35,12 +36,13 @@ public class MeshQueueSenderRabbitAdapter implements MeshQueueSender {
 
     @Override
     public void senderBiologicalObject(BiologicalObject biologicalObject) {
+        String safeName = LogSanitizer.sanitize(biologicalObject.getName());
         try {
-            log.info("Attempting to send message to RabbitMQ: {}", biologicalObject.getName());
+            log.info("Attempting to send message to RabbitMQ: {}", safeName);
             emitter.send(biologicalObject);
-            log.info("Message dispatched to queue-ncbi: {}", biologicalObject.getName());
+            log.info("Message dispatched to queue-ncbi: {}", safeName);
         } catch (Exception e) {
-            log.error("Failed to send message to RabbitMQ: {}", biologicalObject.getName(), e);
+            log.error("Failed to send message to RabbitMQ: {}", safeName, e);
             throw e;
         }
     }

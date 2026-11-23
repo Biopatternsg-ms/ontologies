@@ -15,11 +15,13 @@
  */
 package com.biopatternsg.application.usecase;
 
+import com.biopatternsg.application.services.BiologicalObjectNameResolver;
 import com.biopatternsg.domain.model.mesh.BiologicalObject;
 import com.biopatternsg.domain.model.mesh.MeshInfo;
 import com.biopatternsg.domain.port.in.SendBiologicalObjectToQueue;
 import com.biopatternsg.domain.port.out.producers.MeshQueueSender;
 import com.biopatternsg.domain.port.out.repositories.MeshOntologyRepository;
+import com.biopatternsg.shared.LogSanitizer;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,18 +44,16 @@ public class SendBiologicalObjectToQueueUseCase implements SendBiologicalObjectT
             return;
         }
 
-        if (biologicalObject.getName() == null || biologicalObject.getName().isBlank()) {
-            if (biologicalObject.getSymbol() != null && !biologicalObject.getSymbol().isBlank()) {
-                biologicalObject.setName(biologicalObject.getSymbol().trim());
-            } else {
-                log.warn("Skipping queue dispatch for biologicalObject id={}: name and symbol are null or blank",
-                        biologicalObject.getId());
-                return;
-            }
+        Optional<String> effectiveNameOpt = BiologicalObjectNameResolver.resolveEffectiveName(biologicalObject);
+        if (effectiveNameOpt.isEmpty()) {
+            log.warn("Skipping queue dispatch for biologicalObject id={}: name and symbol are null or blank",
+                    LogSanitizer.sanitize(biologicalObject.getId()));
+            return;
         }
 
-        if (isSavedName(biologicalObject.getName()) || isSavedSynonyms(biologicalObject.getSynonyms())) {
-            log.info("Mesh tree for {} already exists", biologicalObject.getName());
+        String effectiveName = effectiveNameOpt.get();
+        if (isSavedName(effectiveName) || isSavedSynonyms(biologicalObject.getSynonyms())) {
+            log.info("Mesh tree for {} already exists", LogSanitizer.sanitize(effectiveName));
             return;
         }
 
@@ -68,9 +68,8 @@ public class SendBiologicalObjectToQueueUseCase implements SendBiologicalObjectT
         return bySynonyms.isPresent();
     }
 
-    boolean isSavedName(String name) {
+    private boolean isSavedName(String name) {
         Optional<MeshInfo> byName = meshOntologyRepository.findByName(name);
         return byName.isPresent();
     }
-
 }

@@ -68,6 +68,19 @@ List<GoTerm> terms = collections.stream()
 - This prevents `Use of default toString()` static analysis findings (e.g., GitHub Code Quality / CodeQL) and ensures meaningful log/debug representations.
 - Exclude sensitive fields (e.g., passwords, tokens, secrets) with `@ToString.Exclude` whenever applicable.
 
+### 3.4. Log Injection Prevention (CWE-117 / CodeQL)
+- **Never** log raw user-provided, RabbitMQ message, or external API values directly via SLF4J (`log.info`, `log.warn`, `log.error`, `log.debug`). Unsanitized line breaks (`\n`, `\r`) allow log forging and trigger GitHub CodeQL `java/log-injection` alerts.
+- Always wrap untrusted/external values with `com.biopatternsg.shared.LogSanitizer.sanitize(value)`, which safely converts `null` and replaces `\n` and `\r` with `_`.
+
+```java
+// ❌ INCORRECT: Raw user-provided value logged directly (CodeQL java/log-injection)
+log.warn("Skipping queue dispatch for biologicalObject id={}", biologicalObject.getId());
+
+// ✅ CORRECT: Untrusted value sanitized before logging
+log.warn("Skipping queue dispatch for biologicalObject id={}",
+        LogSanitizer.sanitize(biologicalObject.getId()));
+```
+
 ---
 
 ## 4. Static Mappers (`com.biopatternsg.infrastructure.mapper`)

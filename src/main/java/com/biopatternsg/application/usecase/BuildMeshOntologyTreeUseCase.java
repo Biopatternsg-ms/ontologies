@@ -15,6 +15,7 @@
  */
 package com.biopatternsg.application.usecase;
 
+import com.biopatternsg.application.services.BiologicalObjectNameResolver;
 import com.biopatternsg.application.services.BiologicalObjectsService;
 import com.biopatternsg.application.services.MeshOntologyService;
 import com.biopatternsg.domain.model.mesh.BiologicalObject;
@@ -22,16 +23,18 @@ import com.biopatternsg.domain.model.mesh.MeshInfo;
 import com.biopatternsg.domain.model.mesh.SummaryMesh;
 import com.biopatternsg.domain.port.in.BuildMeshOntologyTree;
 import com.biopatternsg.domain.port.out.repositories.MeshOntologyRepository;
+import com.biopatternsg.shared.LogSanitizer;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayDeque;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.Stack;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -50,85 +53,85 @@ public class BuildMeshOntologyTreeUseCase implements BuildMeshOntologyTree {
             return;
         }
 
-        if (biologicalObject.getName() == null || biologicalObject.getName().isBlank()) {
-            if (biologicalObject.getSymbol() != null && !biologicalObject.getSymbol().isBlank()) {
-                biologicalObject.setName(biologicalObject.getSymbol().trim());
-            } else {
-                log.warn("Skipping building tree mesh for biologicalObject id={}: name and symbol are null or blank",
-                        biologicalObject.getId());
-                return;
-            }
-        }
-
-        log.info("Start building tree mesh: {}", biologicalObject.getName());
-
-        List<String> meshTermIds = meshOntologyService.getMeshTermIds(biologicalObject.getName());
-        List<String> biologicalObjectsSynonyms = biologicalObject.getSynonyms();
-        Stack<String> termIdsStack = new Stack<>();
-
-        Optional<MeshInfo> matchTermIdOptional = findFirstMatchTerm(meshTermIds, biologicalObjectsSynonyms, biologicalObject.getName());
-
-        if (matchTermIdOptional.isEmpty()) {
-            log.info("No match term found for {}", biologicalObject.getName());
+        Optional<String> effectiveNameOpt = BiologicalObjectNameResolver.resolveEffectiveName(biologicalObject);
+        if (effectiveNameOpt.isEmpty()) {
+            log.warn("Skipping building tree mesh for biologicalObject id={}: name and symbol are null or blank",
+                    LogSanitizer.sanitize(biologicalObject.getId()));
             return;
         }
 
-        MeshInfo matchTermId = matchTermIdOptional.get();
-        saveMechTerm(matchTermId);
+        String effectiveName = effectiveNameOpt.get();
+        String safeEffectiveName = LogSanitizer.sanitize(effectiveName);
+        if (isSavedName(effectiveName)) {
+            log.info("Mesh tree for {} already exists, skipping external lookup", safeEffectiveName);
+            return;
+        }
 
-        biologicalObjectsService.updateMeshId(biologicalObject.getId(), matchTermId.getMeshId());
+        log.info("Start building tree mesh: {}", safeEffectiveName);
 
-        matchTermId.getParents().forEach(termIdsStack::push);
+        List<String> meshTermIds = meshOntologyService.getMeshTermIds(effectiveName);
+        Optional<MeshInfo> matchTermOptional = findFirstMatchTerm(meshTermIds, biologicalObject.getSynonyms(), effectiveName);
+        if (matchTermOptional.isEmpty()) {
+            log.info("No match term found for {}", safeEffectiveName);
+            return;
+        }
 
-        while (!termIdsStack.isEmpty()) {
-            String currentTermId = termIdsStack.pop();
+        MeshInfo matchTerm = matchTermOptional.get();
+        saveMeshTerm(matchTerm);
+        biologicalObjectsService.updateMeshId(biologicalObject.getId(), matchTerm.getMeshId());
+        saveAncestorTree(matchTerm);
 
+        log.info("End building tree mesh: {}", safeEffectiveName);
+    }
+
+    private void saveAncestorTree(MeshInfo rootMatch) {
+        Deque<String> termIdsQueue = new ArrayDeque<>();
+        if (rootMatch.getParents() != null) {
+            rootMatch.getParents().forEach(termIdsQueue::push);
+        }
+
+        while (!termIdsQueue.isEmpty()) {
+            String currentTermId = termIdsQueue.pop();
+            String safeTermId = LogSanitizer.sanitize(currentTermId);
             if (isSavedTerm(currentTermId)) {
-                log.info("Term {} already exists", currentTermId);
+                log.info("Term {} already exists", safeTermId);
                 continue;
             }
 
             SummaryMesh currentSummaryMesh = meshOntologyService.getSummarySynonyms(currentTermId);
-            List<String> currentTermParents = currentSummaryMesh.getParents().stream().toList();
+            MeshInfo ancestorMeshInfo = buildAncestorMeshInfo(currentTermId, currentSummaryMesh);
+            saveMeshTerm(ancestorMeshInfo);
+            log.info("Term {} saved", safeTermId);
 
-            List<String> currentSynonyms = currentSummaryMesh.getMeshSynonyms().stream().toList();
-            String currentName = currentSynonyms.isEmpty() ? currentTermId : currentSynonyms.getFirst();
-            List<String> remainingSynonyms = currentSynonyms.size() > 1
-                    ? currentSynonyms.subList(1, currentSynonyms.size())
-                    : Collections.emptyList();
-
-            MeshInfo meshInfoToSave = MeshInfo.builder()
-                    .meshId(currentTermId)
-                    .name(currentName)
-                    .parents(currentTermParents)
-                    .synonyms(remainingSynonyms)
-                    .build();
-
-            saveMechTerm(meshInfoToSave);
-            log.info("Term {} saved", currentTermId);
-
-            currentTermParents.forEach(termIdsStack::push);
+            ancestorMeshInfo.getParents().forEach(termIdsQueue::push);
         }
-
-        log.info("End building tree mesh: {}", biologicalObject.getName());
     }
 
-    private void saveMechTerm(MeshInfo matchTermId) {
-        meshOntologyRepository.save(matchTermId);
+    private MeshInfo buildAncestorMeshInfo(String termId, SummaryMesh summary) {
+        List<String> parents = summary.getParents().stream().toList();
+        List<String> synonyms = summary.getMeshSynonyms().stream().toList();
+        String name = synonyms.isEmpty() ? termId : synonyms.getFirst();
+        List<String> remainingSynonyms = synonyms.size() > 1
+                ? synonyms.subList(1, synonyms.size())
+                : Collections.emptyList();
+
+        return MeshInfo.builder()
+                .meshId(termId)
+                .name(name)
+                .parents(parents)
+                .synonyms(remainingSynonyms)
+                .build();
     }
 
-    Optional<MeshInfo> findFirstMatchTerm(List<String> meshTermIds, List<String> biologicalObjectsSynonyms, String name) {
+    private void saveMeshTerm(MeshInfo meshInfo) {
+        meshOntologyRepository.save(meshInfo);
+    }
+
+    private Optional<MeshInfo> findFirstMatchTerm(List<String> meshTermIds, List<String> biologicalObjectsSynonyms, String name) {
         for (String termId : meshTermIds) {
             SummaryMesh summary = meshOntologyService.getSummarySynonyms(termId);
-            boolean containSynonym = containSynonym(summary.getMeshSynonyms().stream().toList(), biologicalObjectsSynonyms);
-
-            if (isSavedName(name)) {
-                return Optional.empty();
-            }
-
-            if (containSynonym) {
-                List<String> synonyms = summary.getMeshSynonyms().stream().toList();
-
+            List<String> synonyms = summary.getMeshSynonyms().stream().toList();
+            if (containSynonym(synonyms, biologicalObjectsSynonyms)) {
                 return Optional.of(
                         MeshInfo.builder()
                                 .meshId(termId)
@@ -139,13 +142,11 @@ public class BuildMeshOntologyTreeUseCase implements BuildMeshOntologyTree {
                 );
             }
         }
-
         return Optional.empty();
     }
 
-    boolean isSavedName(String name) {
-        Optional<MeshInfo> byName = meshOntologyRepository.findByName(name);
-        return byName.isPresent();
+    private boolean isSavedName(String name) {
+        return meshOntologyRepository.findByName(name).isPresent();
     }
 
     private boolean containSynonym(List<String> synonyms, List<String> biologicalObjectSynonym) {
@@ -163,9 +164,7 @@ public class BuildMeshOntologyTreeUseCase implements BuildMeshOntologyTree {
                 .anyMatch(lowerCaseBOSynonyms::contains);
     }
 
-    boolean isSavedTerm(String term) {
-        Optional<MeshInfo> byName = meshOntologyRepository.findByMeshId(term);
-        return byName.isPresent();
+    private boolean isSavedTerm(String term) {
+        return meshOntologyRepository.findByMeshId(term).isPresent();
     }
-
 }
