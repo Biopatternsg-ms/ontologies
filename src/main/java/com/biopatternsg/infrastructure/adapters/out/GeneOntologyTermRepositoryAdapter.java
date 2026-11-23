@@ -21,25 +21,21 @@ import com.biopatternsg.infrastructure.mapper.GoTermMapper;
 import com.biopatternsg.infrastructure.mongo.GoTermCollection;
 import io.quarkus.mongodb.panache.PanacheMongoRepository;
 import jakarta.enterprise.context.ApplicationScoped;
-import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
 @ApplicationScoped
-@RequiredArgsConstructor
 public class GeneOntologyTermRepositoryAdapter implements GeneOntologyTermRepository, PanacheMongoRepository<GoTermCollection> {
-
-    private final GoTermMapper goTermMapper;
 
     @Override
     public List<GoTerm> findByIds(List<String> ids) {
         return find("{termId: {$in: ?1}}", ids).list().stream()
-                .map(goTermMapper::toModel)
+                .map(GoTermMapper::collectionToModel)
                 .toList();
     }
 
     @Override
     public void save(GoTerm goTerm) {
-        persistOrUpdate(goTermMapper.toEntity(goTerm));
+        persistOrUpdate(GoTermMapper.modelToCollection(goTerm));
     }
 }

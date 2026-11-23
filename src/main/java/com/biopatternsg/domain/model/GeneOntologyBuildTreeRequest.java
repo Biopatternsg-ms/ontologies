@@ -18,14 +18,16 @@ package com.biopatternsg.domain.model;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 @AllArgsConstructor
 @Getter
 @Setter
+@ToString
 public class GeneOntologyBuildTreeRequest {
     private List<String> cellularComponent;
     private List<String> molecularFunction;
@@ -33,9 +35,10 @@ public class GeneOntologyBuildTreeRequest {
 
     public List<String> getGoTermIds() {
         return Stream.of(cellularComponent, molecularFunction, biologicalProcess)
+                .filter(Objects::nonNull)
                 .flatMap(List::stream)
-                .collect(Collectors.toSet())
-                .stream()
+                .filter(Objects::nonNull)
+                .distinct()
                 .toList();
     }
 }

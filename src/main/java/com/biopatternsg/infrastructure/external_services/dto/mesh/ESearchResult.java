@@ -22,6 +22,7 @@ import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.util.List;
 
@@ -30,6 +31,7 @@ import java.util.List;
 @XmlAccessorType(XmlAccessType.FIELD)
 @Getter
 @Setter
+@ToString
 public class ESearchResult {
     @XmlElement(name = "Count")
     private String count;
@@ -38,6 +40,7 @@ public class ESearchResult {
     private IdListWrapper idList;
 
     @XmlAccessorType(XmlAccessType.FIELD)
+    @ToString
     public static class IdListWrapper {
 
         @XmlElement(name = "Id")

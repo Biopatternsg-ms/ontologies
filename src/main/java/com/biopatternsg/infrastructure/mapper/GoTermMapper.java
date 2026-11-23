@@ -22,30 +22,29 @@ import com.biopatternsg.infrastructure.external_services.dto.go.GoTermResponse;
 import com.biopatternsg.infrastructure.external_services.dto.go.PathToRootResponse;
 import com.biopatternsg.infrastructure.external_services.dto.go.PathsToRootResponse;
 import com.biopatternsg.infrastructure.mongo.GoTermCollection;
-import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
-@ApplicationScoped
-public class GoTermMapper {
+public final class GoTermMapper {
 
-    public List<GoTerm> toEntity(GoTermResponse response) {
+    private GoTermMapper() {
+    }
+
+    public static List<GoTerm> quickGoToModelList(GoTermResponse response) {
         if (response == null || response.results() == null) {
             return List.of();
         }
-        
         return response.results().stream()
-                .map(this::mapGoTermToEntity)
-                .collect(Collectors.toList());
+                .filter(Objects::nonNull)
+                .map(GoTermMapper::mapQuickGoTermToModel)
+                .toList();
     }
 
-    public GoTerm toModel(GoTermCollection entity) {
+    public static GoTerm collectionToModel(GoTermCollection entity) {
         if (entity == null) {
             return null;
         }
-
         return GoTerm.builder()
                 .id(entity.id != null ? entity.id.toString() : null)
                 .termId(entity.getTermId())
@@ -55,98 +54,19 @@ public class GoTermMapper {
                 .build();
     }
 
-    public GoTermCollection toEntity(GoTerm term) {
-        if (term == null) {
+    public static GoTermCollection modelToCollection(GoTerm model) {
+        if (model == null) {
             return null;
         }
-
         var entity = new GoTermCollection();
-        entity.setTermId(term.getTermId());
-        entity.setName(term.getName());
-        entity.setSynonyms(mapModelToSynonyms(term.getSynonyms()));
-        entity.setParentRelations(mapModelToParentRelations(term.getParentRelations()));
-
+        entity.setTermId(model.getTermId());
+        entity.setName(model.getName());
+        entity.setSynonyms(mapModelToSynonyms(model.getSynonyms()));
+        entity.setParentRelations(mapModelToParentRelations(model.getParentRelations()));
         return entity;
     }
 
-    private List<GoTerm.Synonym> mapSynonymsToModel(List<GoTermCollection.Synonym> synonyms) {
-        if (synonyms == null) {
-            return null;
-        }
-        return synonyms.stream()
-                .map(syn -> GoTerm.Synonym.builder()
-                        .name(syn.getName())
-                        .type(syn.getType())
-                        .build())
-                .collect(Collectors.toList());
-    }
-
-    private List<GoTermCollection.Synonym> mapModelToSynonyms(List<GoTerm.Synonym> synonyms) {
-        if (synonyms == null) {
-            return null;
-        }
-        return synonyms.stream()
-                .map(syn -> {
-                    var synonym = new GoTermCollection.Synonym();
-                    synonym.setName(syn.getName());
-                    synonym.setType(syn.getType());
-                    return synonym;
-                })
-                .collect(Collectors.toList());
-    }
-
-    private List<GoTerm.ParentRelation> mapParentRelationsToModel(List<GoTermCollection.ParentRelation> parentRelations) {
-        if (parentRelations == null) {
-            return null;
-        }
-        return parentRelations.stream()
-                .map(rel -> GoTerm.ParentRelation.builder()
-                        .parent(rel.getParent())
-                        .relationship(rel.getRelationship())
-                        .build())
-                .collect(Collectors.toList());
-    }
-
-    private List<GoTermCollection.ParentRelation> mapModelToParentRelations(List<GoTerm.ParentRelation> relations) {
-        if (relations == null) {
-            return null;
-        }
-        return relations.stream()
-                .map(rel -> {
-                    var relation = new GoTermCollection.ParentRelation();
-                    relation.setParent(rel.getParent());
-                    relation.setRelationship(rel.getRelationship());
-                    return relation;
-                })
-                .collect(Collectors.toList());
-    }
-
-    private GoTerm mapGoTermToEntity(GoTermResponse.GoTerm goTerm) {
-        if (goTerm == null) {
-            return null;
-        }
-
-        var entity = new GoTerm();
-        entity.setTermId(goTerm.id());
-        entity.setName(goTerm.name());
-
-        if (goTerm.synonyms() != null) {
-            entity.setSynonyms(
-                goTerm.synonyms().stream()
-                    .map(syn -> {
-                        var synEntity = new GoTerm.Synonym();
-                        synEntity.setName(syn.name());
-                        synEntity.setType(syn.type());
-                        return synEntity;
-                    })
-                    .collect(Collectors.toList())
-            );
-        }
-
-        return entity;
-    }
-
-    public PathsToRoot toPathsToRoot(PathsToRootResponse response) {
+    public static PathsToRoot pathsToRootToModel(PathsToRootResponse response) {
         if (response == null) {
             return PathsToRoot.builder()
                     .numberOfHits(0)
@@ -157,7 +77,7 @@ public class GoTermMapper {
                 ? List.of()
                 : response.results().stream()
                         .filter(Objects::nonNull)
-                        .map(this::mapPathGroup)
+                        .map(GoTermMapper::mapPathGroup)
                         .toList();
         return PathsToRoot.builder()
                 .numberOfHits(response.numberOfHits())
@@ -165,14 +85,104 @@ public class GoTermMapper {
                 .build();
     }
 
-    private List<PathToRoot> mapPathGroup(List<PathToRootResponse> group) {
-        return group.stream()
+    private static List<GoTerm.Synonym> mapSynonymsToModel(List<GoTermCollection.Synonym> synonyms) {
+        if (synonyms == null) {
+            return List.of();
+        }
+        return synonyms.stream()
                 .filter(Objects::nonNull)
-                .map(this::mapPathToRoot)
+                .map(GoTermMapper::mapSynonymToModel)
                 .toList();
     }
 
-    private PathToRoot mapPathToRoot(PathToRootResponse dto) {
+    private static GoTerm.Synonym mapSynonymToModel(GoTermCollection.Synonym syn) {
+        return GoTerm.Synonym.builder()
+                .name(syn.getName())
+                .type(syn.getType())
+                .build();
+    }
+
+    private static List<GoTermCollection.Synonym> mapModelToSynonyms(List<GoTerm.Synonym> synonyms) {
+        if (synonyms == null) {
+            return List.of();
+        }
+        return synonyms.stream()
+                .filter(Objects::nonNull)
+                .map(GoTermMapper::mapSynonymToCollection)
+                .toList();
+    }
+
+    private static GoTermCollection.Synonym mapSynonymToCollection(GoTerm.Synonym syn) {
+        var synonym = new GoTermCollection.Synonym();
+        synonym.setName(syn.getName());
+        synonym.setType(syn.getType());
+        return synonym;
+    }
+
+    private static List<GoTerm.ParentRelation> mapParentRelationsToModel(List<GoTermCollection.ParentRelation> relations) {
+        if (relations == null) {
+            return List.of();
+        }
+        return relations.stream()
+                .filter(Objects::nonNull)
+                .map(GoTermMapper::mapParentRelationToModel)
+                .toList();
+    }
+
+    private static GoTerm.ParentRelation mapParentRelationToModel(GoTermCollection.ParentRelation rel) {
+        return GoTerm.ParentRelation.builder()
+                .parent(rel.getParent())
+                .relationship(rel.getRelationship())
+                .build();
+    }
+
+    private static List<GoTermCollection.ParentRelation> mapModelToParentRelations(List<GoTerm.ParentRelation> relations) {
+        if (relations == null) {
+            return List.of();
+        }
+        return relations.stream()
+                .filter(Objects::nonNull)
+                .map(GoTermMapper::mapParentRelationToCollection)
+                .toList();
+    }
+
+    private static GoTermCollection.ParentRelation mapParentRelationToCollection(GoTerm.ParentRelation rel) {
+        var relation = new GoTermCollection.ParentRelation();
+        relation.setParent(rel.getParent());
+        relation.setRelationship(rel.getRelationship());
+        return relation;
+    }
+
+    private static GoTerm mapQuickGoTermToModel(GoTermResponse.GoTerm goTerm) {
+        List<GoTerm.Synonym> synonyms = goTerm.synonyms() == null
+                ? List.of()
+                : goTerm.synonyms().stream()
+                        .filter(Objects::nonNull)
+                        .map(GoTermMapper::mapQuickGoSynonymToModel)
+                        .toList();
+
+        return GoTerm.builder()
+                .termId(goTerm.id())
+                .name(goTerm.name())
+                .synonyms(synonyms)
+                .build();
+    }
+
+    private static GoTerm.Synonym mapQuickGoSynonymToModel(GoTermResponse.GoTerm.Synonym syn) {
+        return GoTerm.Synonym.builder()
+                .name(syn.name())
+                .type(syn.type())
+                .build();
+    }
+
+    private static List<PathToRoot> mapPathGroup(List<PathToRootResponse> group) {
+        return group.stream()
+                .filter(Objects::nonNull)
+                .map(GoTermMapper::mapPathToRoot)
+                .toList();
+    }
+
+    private static PathToRoot mapPathToRoot(PathToRootResponse dto) {
         return PathToRoot.builder()
                 .child(dto.child())
                 .parent(dto.parent())
