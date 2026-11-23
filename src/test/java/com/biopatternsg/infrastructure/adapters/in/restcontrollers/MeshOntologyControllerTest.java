@@ -18,11 +18,13 @@ package com.biopatternsg.infrastructure.adapters.in.restcontrollers;
 import com.biopatternsg.domain.model.mesh.MeshCategory;
 import com.biopatternsg.domain.port.in.CheckMeshTermType;
 import com.biopatternsg.domain.port.in.SearchMeshIdBySynonyms;
+import com.biopatternsg.infrastructure.dtos.BuildMeshTreeRequest;
 import com.biopatternsg.infrastructure.dtos.CheckAllMeshTypesRequest;
 import com.biopatternsg.infrastructure.dtos.CheckAllMeshTypesResponse;
 import com.biopatternsg.infrastructure.dtos.CheckMeshTypeRequest;
 import com.biopatternsg.infrastructure.dtos.CheckMeshTypeResponse;
 import com.biopatternsg.infrastructure.dtos.MeshIdResponse;
+import com.biopatternsg.infrastructure.dtos.MessageResponse;
 import com.biopatternsg.infrastructure.dtos.SearchMeshIdRequest;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
@@ -74,7 +76,18 @@ class MeshOntologyControllerTest {
         Response response = controller.searchMeshId(request);
 
         assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
-        assertEquals("{\"message\": \"MeSH term not found for provided synonyms\"}", response.getEntity());
+        assertEquals(new MessageResponse("MeSH term not found for provided synonyms"), response.getEntity());
+    }
+
+    @Test
+    void shouldReturn202WithMessageResponseWhenBuildTreeMeshIsCalled() {
+        MeshOntologyController controller = new MeshOntologyController(obj -> {}, synonyms -> Optional.empty(), createCheckTypePort(false), Runnable::run);
+
+        BuildMeshTreeRequest request = new BuildMeshTreeRequest("1", "TP53", "TP53", List.of("p53"));
+        Response response = controller.buildTreeMesh(request);
+
+        assertEquals(Response.Status.ACCEPTED.getStatusCode(), response.getStatus());
+        assertEquals(new MessageResponse("Building mesh tree"), response.getEntity());
     }
 
     @Test

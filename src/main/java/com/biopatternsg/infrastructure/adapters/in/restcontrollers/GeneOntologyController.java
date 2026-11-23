@@ -17,6 +17,9 @@ package com.biopatternsg.infrastructure.adapters.in.restcontrollers;
 
 import com.biopatternsg.domain.model.GeneOntologyBuildTreeRequest;
 import com.biopatternsg.domain.port.in.BuildGeneOntologyTree;
+import com.biopatternsg.infrastructure.dtos.BuildGeneOntologyTreeRequest;
+import com.biopatternsg.infrastructure.dtos.MessageResponse;
+import com.biopatternsg.infrastructure.mapper.OntologyRequestMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.POST;
@@ -55,10 +58,7 @@ public class GeneOntologyController {
                     description = "Gene Ontology tree building process started successfully",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(
-                                    type = SchemaType.STRING,
-                                    description = "Success message"
-                            )
+                            schema = @Schema(implementation = MessageResponse.class)
                     )
             ),
             @APIResponse(
@@ -73,17 +73,20 @@ public class GeneOntologyController {
                     )
             )
     })
-    public Response buildTreeGO(@Valid GeneOntologyBuildTreeRequest geneOntologyBuildTreeRequest) {
-        CompletableFuture.runAsync(() -> {
-            try {
-                buildGeneOntologyTree.execute(geneOntologyBuildTreeRequest);
-            } catch (Exception e) {
-                log.error("Error building gene ontology tree", e);
-            }
-        }, executor);
+    public Response buildTreeGO(@Valid BuildGeneOntologyTreeRequest request) {
+        GeneOntologyBuildTreeRequest domainRequest = OntologyRequestMapper.requestToModel(request);
+        CompletableFuture.runAsync(() -> runBuildGeneOntologyTree(domainRequest), executor);
 
         return Response.accepted()
-                .entity("{\"message\": \"Building Gene Ontology tree\"}")
+                .entity(new MessageResponse("Building Gene Ontology tree"))
                 .build();
+    }
+
+    private void runBuildGeneOntologyTree(GeneOntologyBuildTreeRequest request) {
+        try {
+            buildGeneOntologyTree.execute(request);
+        } catch (Exception e) {
+            log.error("Error building gene ontology tree", e);
+        }
     }
 }

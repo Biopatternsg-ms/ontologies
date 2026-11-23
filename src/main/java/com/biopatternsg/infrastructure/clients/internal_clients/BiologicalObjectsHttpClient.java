@@ -27,6 +27,6 @@ public interface BiologicalObjectsHttpClient {
 
     @PATCH
     @Path("biological-object/update-mesh-id")
-    Response buildMeshOntologyTree(@RequestBody UpdateMeshIdRequest updateMeshIdRequest);
+    Response updateMeshId(@RequestBody UpdateMeshIdRequest updateMeshIdRequest);
 
 }
