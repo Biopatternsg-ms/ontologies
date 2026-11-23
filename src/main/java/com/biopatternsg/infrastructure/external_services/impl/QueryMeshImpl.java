@@ -15,11 +15,11 @@
  */
 package com.biopatternsg.infrastructure.external_services.impl;
 
-import com.biopatternsg.domain.model.mesh.ESearchResult;
-import com.biopatternsg.domain.model.mesh.ESummaryResult;
 import com.biopatternsg.domain.model.mesh.SummaryMesh;
 import com.biopatternsg.infrastructure.clients.external_clients.MeshOntologyHttpClient;
 import com.biopatternsg.infrastructure.external_services.QueryMesh;
+import com.biopatternsg.infrastructure.external_services.dto.mesh.ESearchResult;
+import com.biopatternsg.infrastructure.external_services.dto.mesh.ESummaryResult;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -90,7 +90,7 @@ public class QueryMeshImpl implements QueryMesh {
         Set<String> itemsIds = result.getDocSum().getItems().stream()
                 .filter(Objects::nonNull)
                 .filter(it -> "DS_MeshTerms".equals(it.getName()))
-                .flatMap(it -> it.getValuesBySubItemNameOtra("string").stream())
+                .flatMap(it -> it.getValuesBySubItemNameOrText("string").stream())
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 

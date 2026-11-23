@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.biopatternsg.domain.model.mesh;
+package com.biopatternsg.infrastructure.external_services.dto.mesh;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.xml.bind.annotation.XmlAccessType;

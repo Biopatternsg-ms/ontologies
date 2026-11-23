@@ -15,8 +15,8 @@
  */
 package com.biopatternsg.infrastructure.clients.external_clients;
 
-import com.biopatternsg.domain.model.mesh.ESearchResult;
-import com.biopatternsg.domain.model.mesh.ESummaryResult;
+import com.biopatternsg.infrastructure.external_services.dto.mesh.ESearchResult;
+import com.biopatternsg.infrastructure.external_services.dto.mesh.ESummaryResult;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;

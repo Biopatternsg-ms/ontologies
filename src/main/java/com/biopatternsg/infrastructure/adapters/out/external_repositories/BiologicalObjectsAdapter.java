@@ -20,7 +20,9 @@ import com.biopatternsg.infrastructure.internal_services.QueryBiologicalObjects;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @ApplicationScoped
 @RequiredArgsConstructor
 public class BiologicalObjectsAdapter implements BiologicalObjectsRepository {
@@ -28,7 +30,12 @@ public class BiologicalObjectsAdapter implements BiologicalObjectsRepository {
     private final QueryBiologicalObjects queryBiologicalObjects;
 
     @Override
-    public Response updateMeshId(String biologicalObjectId, String meshId) {
-        return queryBiologicalObjects.updateMeshId(biologicalObjectId, meshId);
+    public void updateMeshId(String biologicalObjectId, String meshId) {
+        try (Response response = queryBiologicalObjects.updateMeshId(biologicalObjectId, meshId)) {
+            if (response != null) {
+                log.info("Update meshId={} for biologicalObject={} finished with status={}",
+                        meshId, biologicalObjectId, response.getStatus());
+            }
+        }
     }
 }

@@ -13,10 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.biopatternsg.domain.port.out.consumers;
+package com.biopatternsg.infrastructure.external_services.dto.go;
 
-import io.vertx.core.json.JsonObject;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-public interface MeshQueueConsumer {
-    void consumer(JsonObject jsonMsg);
+@JsonIgnoreProperties(ignoreUnknown = true)
+public record PathToRootResponse(
+        String child,
+        String parent,
+        String relationship
+) {
 }

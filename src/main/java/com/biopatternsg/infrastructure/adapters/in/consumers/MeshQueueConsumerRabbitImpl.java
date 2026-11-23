@@ -17,7 +17,6 @@ package com.biopatternsg.infrastructure.adapters.in.consumers;
 
 import com.biopatternsg.domain.model.mesh.BiologicalObject;
 import com.biopatternsg.domain.port.in.BuildMeshOntologyTree;
-import com.biopatternsg.domain.port.out.consumers.MeshQueueConsumer;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -28,13 +27,12 @@ import org.eclipse.microprofile.reactive.messaging.Incoming;
 @Slf4j
 @ApplicationScoped
 @RequiredArgsConstructor
-public class MeshQueueConsumerRabbitImpl implements MeshQueueConsumer {
+public class MeshQueueConsumerRabbitImpl {
 
     private final BuildMeshOntologyTree buildMeshOntologyTree;
 
     @Incoming("ncbi-in")
     @Blocking
-    @Override
     public void consumer(JsonObject jsonMsg) {
         log.info("Message received from mesh-queue: {}", jsonMsg);
         try {

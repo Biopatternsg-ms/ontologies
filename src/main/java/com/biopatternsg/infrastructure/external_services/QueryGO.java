@@ -15,10 +15,10 @@
  */
 package com.biopatternsg.infrastructure.external_services;
 
-import com.biopatternsg.domain.model.PathsToRoot;
 import com.biopatternsg.infrastructure.external_services.dto.go.GoTermResponse;
+import com.biopatternsg.infrastructure.external_services.dto.go.PathsToRootResponse;
 
 public interface QueryGO {
-    PathsToRoot getPathsToRoot(String goId);
+    PathsToRootResponse getPathsToRoot(String goId);
     GoTermResponse findGeneOntologies(String joinIds);
 }

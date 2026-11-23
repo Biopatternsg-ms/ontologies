@@ -107,4 +107,33 @@ class ArchitectureLayerTest {
                 .check(this.javaClasses);
     }
 
+    @DisplayName("The Domain layer should not depend on web, messaging, XML, JSON, reflection, or persistence frameworks")
+    @Test
+    void domainLayerFrameworkPurityTest() {
+        ArchRuleDefinition.noClasses()
+                .that().resideInAPackage(ROOT + ".domain..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "jakarta.ws.rs..",
+                        "io.vertx..",
+                        "io.quarkus..",
+                        "jakarta.xml.bind..",
+                        "com.fasterxml.jackson..",
+                        "org.bson..",
+                        "org.w3c.dom.."
+                )
+                .check(this.javaClasses);
+    }
+
+    @DisplayName("The Application layer should not depend on web or messaging frameworks")
+    @Test
+    void applicationLayerFrameworkPurityTest() {
+        ArchRuleDefinition.noClasses()
+                .that().resideInAPackage(ROOT + ".application..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "jakarta.ws.rs..",
+                        "io.vertx.."
+                )
+                .check(this.javaClasses);
+    }
+
 }
