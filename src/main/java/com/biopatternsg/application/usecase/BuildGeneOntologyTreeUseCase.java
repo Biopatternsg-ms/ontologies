@@ -52,13 +52,17 @@ public class BuildGeneOntologyTreeUseCase implements BuildGeneOntologyTree {
 
         List<GoTerm> newGoTerms = geneOntologyTermService.getByIdsInWeb(newGOTermIds);
 
-        newGoTerms.forEach(goTerm -> {
-            List<GoTerm.ParentRelation> parentRelations = getParentRelations(goTerm.getTermId());
-            goTerm.setParentRelations(parentRelations);
-            goTermRepository.save(goTerm);
-        });
+        for (GoTerm goTerm : newGoTerms) {
+            enrichAndSaveGoTerm(goTerm);
+        }
 
         log.info("End Building gene ontology tree");
+    }
+
+    private void enrichAndSaveGoTerm(GoTerm goTerm) {
+        List<GoTerm.ParentRelation> parentRelations = getParentRelations(goTerm.getTermId());
+        goTerm.setParentRelations(parentRelations);
+        goTermRepository.save(goTerm);
     }
 
     private List<GoTerm.ParentRelation> getParentRelations(String newGoTermId) {
@@ -77,7 +81,9 @@ public class BuildGeneOntologyTreeUseCase implements BuildGeneOntologyTree {
     private List<String> getNewGOTermIds(GeneOntologyBuildTreeRequest geneOntology) {
         List<String> goIdsOfRequest = geneOntology.getGoTermIds();
         List<GoTerm> goTermEntities = geneOntologyTermService.getByIdsInDB(goIdsOfRequest);
-        List<String> termIdsInDB = goTermEntities.stream().map(GoTerm::getTermId).toList();
+        Set<String> termIdsInDB = goTermEntities.stream()
+                .map(GoTerm::getTermId)
+                .collect(Collectors.toSet());
 
         return goIdsOfRequest.stream().filter(id -> !termIdsInDB.contains(id)).toList();
     }

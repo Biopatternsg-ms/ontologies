@@ -22,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @ApplicationScoped
-public class BiologicalObjectsServiceImp implements BiologicalObjectsService {
+public class BiologicalObjectsServiceImpl implements BiologicalObjectsService {
 
     private final BiologicalObjectsRepository biologicalObjectsRepository;
 

@@ -27,6 +27,6 @@ public interface MeshOntologyRepository {
     Optional<MeshInfo> findByName(String name);
     Optional<MeshInfo> findBySynonyms(List<String> synonyms);
     Optional<MeshInfo> findBySynonymsCaseInsensitive(List<String> synonyms);
-    default void updateCategories(String meshId, Map<String, Boolean> categories) {}
-    default void updateCategory(String meshId, String category, boolean isType) {}
+    void updateCategories(String meshId, Map<String, Boolean> categories);
+    void updateCategory(String meshId, String category, boolean isType);
 }
