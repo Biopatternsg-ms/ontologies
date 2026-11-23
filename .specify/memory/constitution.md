@@ -1,10 +1,8 @@
 <!--
 Sync Impact Report
-- Version change: 1.0.0 → 1.1.0
-- Modified principles:
-  - IV. Java 21 Clean Code & Method Discipline (added mandatory Log Injection / CWE-117 sanitization rule via com.biopatternsg.shared.LogSanitizer)
-- Added sections: None
-- Removed sections: None
+- Version change: 1.1.0 → 1.1.1
+- Modified sections:
+  - Development Workflow & Quality Gates: Added DocumentationGovernanceTest to verification gate command (`./mvnw test -Dtest=ArchitectureLayerTest,DocumentationGovernanceTest`)
 - Follow-up TODOs: None
 -->
 
@@ -60,7 +58,7 @@ Mapping, structural naming, and documentation standards MUST be strictly enforce
 
 Before completing any feature, refactoring, or bug fix:
 1. Run `./mvnw clean compile` to verify compilation and refresh `target/classes`.
-2. Run `./mvnw test -Dtest=ArchitectureLayerTest` to verify all ArchUnit hexagonal layer and naming rules pass.
+2. Run `./mvnw test -Dtest=ArchitectureLayerTest,DocumentationGovernanceTest` to verify all ArchUnit hexagonal layer/naming rules and Use Case documentation governance checks pass.
 3. Run `./mvnw test` to confirm unit and controller tests pass without regressions.
 4. Update `.agents/use_cases/<UseCaseName>.md`, `.agents/use_cases/README.md`, and `.agents/architecture.md` synchronously whenever Use Cases, Ports, or integrations are added or modified.
 
@@ -72,4 +70,4 @@ This Constitution supersedes ad-hoc development practices in `ontologies`. Detai
 - **Versioning:** Amendments follow semantic versioning (`MAJOR` for backward-incompatible principle removals or redefinitions, `MINOR` for new principles or materially expanded guidance, `PATCH` for clarifications and non-semantic refinements).
 - **Compliance:** All pull requests, Spec Kit plans (`Constitution Check`), and AI-assisted implementations MUST verify compliance with these principles and pass `ArchitectureLayerTest`.
 
-**Version**: 1.1.0 | **Ratified**: 2026-11-22 | **Last Amended**: 2026-11-23
+**Version**: 1.1.1 | **Ratified**: 2026-11-22 | **Last Amended**: 2026-11-23

@@ -197,4 +197,4 @@ Para el conjunto completo de reglas mandatorias de arquitectura y estándares de
     2. Implementar el adaptador correspondiente bajo `infrastructure/adapters/out/` terminando en `Adapter`.
 3. **Verificación Obligatoria:**
     - Ejecutar `./mvnw clean compile` para asegurar compilación exitosa y actualizar `target/classes`.
-    - Ejecutar `./mvnw test -Dtest=ArchitectureLayerTest` para comprobar que las reglas de arquitectura no se hayan violado.
+    - Ejecutar `./mvnw test -Dtest=ArchitectureLayerTest,DocumentationGovernanceTest` para comprobar que las reglas de arquitectura y gobernanza documental no se hayan violado.

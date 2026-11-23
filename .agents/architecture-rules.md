@@ -128,6 +128,6 @@ Before completing any task, verify compilation and architectural compliance:
 # 1. Compile classes (required before ArchUnit imports target/classes)
 ./mvnw clean compile
 
-# 2. Run Hexagonal Architecture validation tests
-./mvnw test -Dtest=ArchitectureLayerTest
+# 2. Run Hexagonal Architecture and Documentation Governance validation tests
+./mvnw test -Dtest=ArchitectureLayerTest,DocumentationGovernanceTest
 ```

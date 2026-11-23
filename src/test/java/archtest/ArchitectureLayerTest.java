@@ -15,11 +15,21 @@
  */
 package archtest;
 
+import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
+import com.tngtech.archunit.core.domain.JavaConstructor;
+import com.tngtech.archunit.core.domain.JavaModifier;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
+import com.tngtech.archunit.lang.ArchCondition;
+import com.tngtech.archunit.lang.ConditionEvents;
+import com.tngtech.archunit.lang.SimpleConditionEvent;
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition;
 import com.tngtech.archunit.library.Architectures;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -107,33 +117,87 @@ class ArchitectureLayerTest {
                 .check(this.javaClasses);
     }
 
-    @DisplayName("The Domain layer should not depend on web, messaging, XML, JSON, reflection, or persistence frameworks")
+    @DisplayName("The Domain layer should not depend on web, CDI, XML, JSON, reflection, messaging, or persistence frameworks")
     @Test
-    void domainLayerFrameworkPurityTest() {
+    void domainShouldNotDependOnFrameworksTest() {
         ArchRuleDefinition.noClasses()
                 .that().resideInAPackage(ROOT + ".domain..")
                 .should().dependOnClassesThat().resideInAnyPackage(
                         "jakarta.ws.rs..",
-                        "io.vertx..",
-                        "io.quarkus..",
+                        "jakarta.enterprise..",
+                        "jakarta.inject..",
                         "jakarta.xml.bind..",
                         "com.fasterxml.jackson..",
+                        "io.quarkus..",
+                        "io.vertx..",
                         "org.bson..",
+                        "org.eclipse.microprofile..",
                         "org.w3c.dom.."
                 )
                 .check(this.javaClasses);
     }
 
-    @DisplayName("The Application layer should not depend on web or messaging frameworks")
+    @DisplayName("The Application layer should not depend on delivery or persistence frameworks")
     @Test
-    void applicationLayerFrameworkPurityTest() {
+    void applicationShouldNotDependOnDeliveryOrPersistenceFrameworksTest() {
         ArchRuleDefinition.noClasses()
                 .that().resideInAPackage(ROOT + ".application..")
                 .should().dependOnClassesThat().resideInAnyPackage(
                         "jakarta.ws.rs..",
-                        "io.vertx.."
+                        "io.vertx..",
+                        "io.quarkus.mongodb..",
+                        "org.bson.."
                 )
                 .check(this.javaClasses);
+    }
+
+    @DisplayName("Use Cases should not depend on concrete service implementations")
+    @Test
+    void useCasesShouldNotDependOnServiceImplementationsTest() {
+        ArchRuleDefinition.noClasses()
+                .that().resideInAPackage(ROOT + ".application.usecase..")
+                .should().dependOnClassesThat().resideInAPackage(ROOT + ".application.services.impl..")
+                .check(this.javaClasses);
+    }
+
+    @DisplayName("Static mappers should be final stateless utility classes with private constructors")
+    @Test
+    void staticMappersShouldBeStatelessFinalUtilityClassesTest() {
+        ArchRuleDefinition.classes()
+                .that().resideInAPackage("..infrastructure.mapper..")
+                .and().areTopLevelClasses()
+                .should().haveModifier(JavaModifier.FINAL)
+                .andShould().notBeAnnotatedWith(ApplicationScoped.class)
+                .andShould().notBeAnnotatedWith(Singleton.class)
+                .andShould().notBeAnnotatedWith(RequestScoped.class)
+                .andShould(haveOnlyPrivateConstructors())
+                .check(this.javaClasses);
+    }
+
+    @DisplayName("Application and Adapter classes should use constructor injection instead of @Inject field injection")
+    @Test
+    void noFieldInjectionInApplicationAndAdaptersTest() {
+        ArchRuleDefinition.noFields()
+                .that().areDeclaredInClassesThat().resideInAnyPackage(
+                        ROOT + ".application..",
+                        ROOT + ".infrastructure.adapters.."
+                )
+                .should().beAnnotatedWith(Inject.class)
+                .check(this.javaClasses);
+    }
+
+    private static ArchCondition<JavaClass> haveOnlyPrivateConstructors() {
+        return new ArchCondition<>("have only private constructors") {
+            @Override
+            public void check(JavaClass item, ConditionEvents events) {
+                for (JavaConstructor constructor : item.getConstructors()) {
+                    if (!constructor.getModifiers().contains(JavaModifier.PRIVATE)) {
+                        events.add(SimpleConditionEvent.violated(item,
+                                item.getName() + " declares a non-private constructor"));
+                    }
+                }
+            }
+        };
     }
 
 }
