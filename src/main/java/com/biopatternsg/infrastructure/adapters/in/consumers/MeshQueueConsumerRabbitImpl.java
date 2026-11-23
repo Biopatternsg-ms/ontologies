@@ -17,6 +17,7 @@ package com.biopatternsg.infrastructure.adapters.in.consumers;
 
 import com.biopatternsg.domain.model.mesh.BiologicalObject;
 import com.biopatternsg.domain.port.in.BuildMeshOntologyTree;
+import com.biopatternsg.shared.LogSanitizer;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -34,20 +35,23 @@ public class MeshQueueConsumerRabbitImpl {
     @Incoming("ncbi-in")
     @Blocking
     public void consumer(JsonObject jsonMsg) {
-        log.info("Message received from mesh-queue: {}", jsonMsg);
+        String safeJsonMsg = LogSanitizer.sanitize(jsonMsg);
+        log.info("Message received from mesh-queue: {}", safeJsonMsg);
         try {
             BiologicalObject biologicalObject = jsonMsg.mapTo(BiologicalObject.class);
+            String safeId = LogSanitizer.sanitize(biologicalObject.getId());
+            String safeName = LogSanitizer.sanitize(biologicalObject.getName());
             log.info("Consuming BiologicalObject from mesh-queue: id={}, name={}, symbol={}, synonyms={}",
-                    biologicalObject.getId(),
-                    biologicalObject.getName(),
-                    biologicalObject.getSymbol(),
-                    biologicalObject.getSynonyms());
+                    safeId,
+                    safeName,
+                    LogSanitizer.sanitize(biologicalObject.getSymbol()),
+                    LogSanitizer.sanitize(biologicalObject.getSynonyms()));
             buildMeshOntologyTree.execute(biologicalObject);
             log.info("Finished processing BiologicalObject from mesh-queue: id={}, name={}",
-                    biologicalObject.getId(),
-                    biologicalObject.getName());
+                    safeId,
+                    safeName);
         } catch (Exception e) {
-            log.error("Error processing message from mesh-queue: {}", jsonMsg, e);
+            log.error("Error processing message from mesh-queue: {}", safeJsonMsg, e);
         }
     }
 

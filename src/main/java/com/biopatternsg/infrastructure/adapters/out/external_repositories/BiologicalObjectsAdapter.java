@@ -17,6 +17,7 @@ package com.biopatternsg.infrastructure.adapters.out.external_repositories;
 
 import com.biopatternsg.domain.port.out.external_repositories.BiologicalObjectsRepository;
 import com.biopatternsg.infrastructure.internal_services.QueryBiologicalObjects;
+import com.biopatternsg.shared.LogSanitizer;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +35,7 @@ public class BiologicalObjectsAdapter implements BiologicalObjectsRepository {
         try (Response response = queryBiologicalObjects.updateMeshId(biologicalObjectId, meshId)) {
             if (response != null) {
                 log.info("Update meshId={} for biologicalObject={} finished with status={}",
-                        meshId, biologicalObjectId, response.getStatus());
+                        LogSanitizer.sanitize(meshId), LogSanitizer.sanitize(biologicalObjectId), response.getStatus());
             }
         }
     }

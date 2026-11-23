@@ -18,6 +18,7 @@ package com.biopatternsg.application.usecase;
 import com.biopatternsg.domain.model.mesh.MeshInfo;
 import com.biopatternsg.domain.port.in.SearchMeshIdBySynonyms;
 import com.biopatternsg.domain.port.out.repositories.MeshOntologyRepository;
+import com.biopatternsg.shared.LogSanitizer;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,17 +55,19 @@ public class SearchMeshIdBySynonymsUseCase implements SearchMeshIdBySynonyms {
             return Optional.empty();
         }
 
-        log.info("Searching MeSH ID for synonyms: {}", cleanSynonyms);
+        String safeSynonyms = LogSanitizer.sanitize(cleanSynonyms);
+        log.info("Searching MeSH ID for synonyms: {}", safeSynonyms);
 
         Optional<MeshInfo> matchOptional = meshOntologyRepository.findBySynonymsCaseInsensitive(cleanSynonyms);
 
         if (matchOptional.isPresent()) {
             String meshId = matchOptional.get().getMeshId();
-            log.info("Found matching MeSH ID: {} for name: {}", meshId, matchOptional.get().getName());
+            log.info("Found matching MeSH ID: {} for name: {}",
+                    LogSanitizer.sanitize(meshId), LogSanitizer.sanitize(matchOptional.get().getName()));
             return Optional.of(meshId);
         }
 
-        log.info("No matching MeSH term found for provided synonyms: {}", cleanSynonyms);
+        log.info("No matching MeSH term found for provided synonyms: {}", safeSynonyms);
         return Optional.empty();
     }
 }

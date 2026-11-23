@@ -19,6 +19,7 @@ import com.biopatternsg.domain.model.mesh.MeshCategory;
 import com.biopatternsg.domain.model.mesh.MeshInfo;
 import com.biopatternsg.domain.port.in.CheckMeshTermType;
 import com.biopatternsg.domain.port.out.repositories.MeshOntologyRepository;
+import com.biopatternsg.shared.LogSanitizer;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,25 +53,27 @@ public class CheckMeshTermTypeUseCase implements CheckMeshTermType {
         }
 
         String initialMeshId = meshId.trim();
+        String safeMeshId = LogSanitizer.sanitize(initialMeshId);
         Optional<MeshInfo> initialTermOpt = meshOntologyRepository.findByMeshId(initialMeshId);
         if (initialTermOpt.isEmpty()) {
-            log.warn("MeSH node {} not found in ontology", initialMeshId);
+            log.warn("MeSH node {} not found in ontology", safeMeshId);
             return false;
         }
 
         Map<String, Boolean> savedCategories = initialTermOpt.get().getCategories();
         if (savedCategories != null && savedCategories.containsKey(targetType.name())) {
             boolean cachedVal = savedCategories.get(targetType.name());
-            log.info("MeSH node {} already has cached result for type {}: {}", initialMeshId, targetType, cachedVal);
+            log.info("MeSH node {} already has cached result for type {}: {}", safeMeshId, targetType, cachedVal);
             return cachedVal;
         }
 
-        log.info("Checking if MeSH node {} is of type {}", initialMeshId, targetType);
+        log.info("Checking if MeSH node {} is of type {}", safeMeshId, targetType);
 
         AtomicBoolean matched = new AtomicBoolean(false);
         traverseAncestors(initialMeshId, initialTermOpt.get(), term -> {
             if (targetType.matches(term.getMeshId(), term.getName(), term.getSynonyms())) {
-                log.info("MeSH node {} matched type {} at term: {} ({})", initialMeshId, targetType, term.getName(), term.getMeshId());
+                log.info("MeSH node {} matched type {} at term: {} ({})",
+                        safeMeshId, targetType, LogSanitizer.sanitize(term.getName()), LogSanitizer.sanitize(term.getMeshId()));
                 matched.set(true);
                 return false;
             }
@@ -79,7 +82,7 @@ public class CheckMeshTermTypeUseCase implements CheckMeshTermType {
 
         boolean isMatch = matched.get();
         if (!isMatch) {
-            log.info("MeSH node {} is NOT of type {}", initialMeshId, targetType);
+            log.info("MeSH node {} is NOT of type {}", safeMeshId, targetType);
         }
         meshOntologyRepository.updateCategory(initialMeshId, targetType.name(), isMatch);
         return isMatch;
@@ -93,9 +96,10 @@ public class CheckMeshTermTypeUseCase implements CheckMeshTermType {
         }
 
         String trimmedId = meshId.trim();
+        String safeMeshId = LogSanitizer.sanitize(trimmedId);
         Optional<MeshInfo> existingTermOpt = meshOntologyRepository.findByMeshId(trimmedId);
         if (existingTermOpt.isEmpty()) {
-            log.warn("MeSH node {} not found in ontology", trimmedId);
+            log.warn("MeSH node {} not found in ontology", safeMeshId);
             return createAllFalseResult();
         }
 
@@ -104,11 +108,11 @@ public class CheckMeshTermTypeUseCase implements CheckMeshTermType {
         Set<MeshCategory> pendingCategories = initializeResults(term.getCategories(), resultMap);
 
         if (pendingCategories.isEmpty()) {
-            log.info("MeSH node {} already has all categories cached, returning saved data: {}", trimmedId, resultMap);
+            log.info("MeSH node {} already has all categories cached, returning saved data: {}", safeMeshId, resultMap);
             return resultMap;
         }
 
-        log.info("Evaluating missing categories {} for MeSH node {}", pendingCategories, trimmedId);
+        log.info("Evaluating missing categories {} for MeSH node {}", pendingCategories, safeMeshId);
 
         traverseAncestors(trimmedId, term, currentTerm -> {
             matchPendingCategories(currentTerm, pendingCategories, resultMap);
@@ -117,7 +121,7 @@ public class CheckMeshTermTypeUseCase implements CheckMeshTermType {
 
         Map<String, Boolean> stringResultMap = toStringResultMap(resultMap);
         meshOntologyRepository.updateCategories(trimmedId, stringResultMap);
-        log.info("Saved all MeSH categories for node {}: {}", trimmedId, stringResultMap);
+        log.info("Saved all MeSH categories for node {}: {}", safeMeshId, stringResultMap);
         return resultMap;
     }
 

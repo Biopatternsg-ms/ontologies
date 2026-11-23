@@ -18,6 +18,7 @@ package com.biopatternsg.infrastructure.internal_services.impl;
 import com.biopatternsg.infrastructure.clients.internal_clients.BiologicalObjectsHttpClient;
 import com.biopatternsg.infrastructure.dtos.UpdateMeshIdRequest;
 import com.biopatternsg.infrastructure.internal_services.QueryBiologicalObjects;
+import com.biopatternsg.shared.LogSanitizer;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +39,8 @@ public class QueryBiologicalObjectsImpl implements QueryBiologicalObjects {
         try {
             return biologicalObjectsHttpClient.buildMeshOntologyTree(new UpdateMeshIdRequest(biologicalObjectId, meshId));
         } catch (Exception e) {
-            log.error("Error updating mesh MeshId for biological object {}: {}", biologicalObjectId, e.getMessage());
+            log.error("Error updating mesh MeshId for biological object {}: {}",
+                    LogSanitizer.sanitize(biologicalObjectId), LogSanitizer.sanitize(e.getMessage()));
             return Response.serverError().build();
         }
     }

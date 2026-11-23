@@ -1,15 +1,9 @@
 <!--
 Sync Impact Report
-- Version change: template (unversioned) → 1.0.0
+- Version change: 1.0.0 → 1.1.0
 - Modified principles:
-  - [PRINCIPLE_1_NAME] → I. Hexagonal Layer Isolation (NON-NEGOTIABLE)
-  - [PRINCIPLE_2_NAME] → II. Use Cases & Application Services Encapsulation
-  - [PRINCIPLE_3_NAME] → III. Zero Business Logic in Inbound & Outbound Adapters
-  - [PRINCIPLE_4_NAME] → IV. Java 21 Clean Code & Method Discipline
-  - [PRINCIPLE_5_NAME] → V. Stateless Pure Mappers, Naming Conventions & Use Case Documentation
-- Added sections:
-  - Technology & Integration Constraints (from [SECTION_2_NAME])
-  - Development Workflow & Quality Gates (from [SECTION_3_NAME])
+  - IV. Java 21 Clean Code & Method Discipline (added mandatory Log Injection / CWE-117 sanitization rule via com.biopatternsg.shared.LogSanitizer)
+- Added sections: None
 - Removed sections: None
 - Follow-up TODOs: None
 -->
@@ -46,6 +40,7 @@ All Java code in `ontologies` MUST adhere to clean, low-complexity standards:
 - **Streams & Private Helpers:** Complex multi-step logic MUST be decomposed into small single-responsibility private methods. Stream/Optional lambdas MUST be single-expression calls or method references and MUST NOT embed multi-line builders, branching, or try/catch blocks. Prefer `.toList()`, Java `record` DTOs (`infrastructure.dtos.*`), and enhanced `switch` expressions for exhaustive enum handling (e.g., `MeshCategory`).
 - **Injection & Null Safety:** Dependencies MUST prefer constructor injection (`private final` fields with `@RequiredArgsConstructor` or an explicit constructor). Use `Objects.equals(a, b)`, return empty collections/maps (`List.of()`, `Collections.emptyMap()`) instead of `null`, avoid dead statements, and close JAX-RS `Response` objects with `try-with-resources`.
 - **Explicit `toString()`:** Every class in `domain.model.*` (including `domain.model.mesh.*`) and `infrastructure.dtos.*` MUST define an explicit `toString()` (via `@ToString`, `@Data`, or Java `record`), excluding sensitive fields with `@ToString.Exclude`.
+- **Log Injection Prevention (CWE-117 / CodeQL):** Every user-provided, message-queue, or external untrusted value passed to logger calls (`log.info`, `log.warn`, `log.error`, `log.debug`) MUST be sanitized via `com.biopatternsg.shared.LogSanitizer.sanitize(value)` (stripping/replacing `\n` and `\r` characters) before logging. Logging raw unsanitized external inputs is strictly prohibited.
 
 ### V. Stateless Pure Mappers, Naming Conventions & Use Case Documentation
 
@@ -77,4 +72,4 @@ This Constitution supersedes ad-hoc development practices in `ontologies`. Detai
 - **Versioning:** Amendments follow semantic versioning (`MAJOR` for backward-incompatible principle removals or redefinitions, `MINOR` for new principles or materially expanded guidance, `PATCH` for clarifications and non-semantic refinements).
 - **Compliance:** All pull requests, Spec Kit plans (`Constitution Check`), and AI-assisted implementations MUST verify compliance with these principles and pass `ArchitectureLayerTest`.
 
-**Version**: 1.0.0 | **Ratified**: 2026-11-22 | **Last Amended**: 2026-11-22
+**Version**: 1.1.0 | **Ratified**: 2026-11-22 | **Last Amended**: 2026-11-23

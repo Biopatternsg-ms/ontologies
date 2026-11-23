@@ -21,6 +21,7 @@ import com.biopatternsg.domain.model.mesh.MeshInfo;
 import com.biopatternsg.domain.port.in.SendBiologicalObjectToQueue;
 import com.biopatternsg.domain.port.out.producers.MeshQueueSender;
 import com.biopatternsg.domain.port.out.repositories.MeshOntologyRepository;
+import com.biopatternsg.shared.LogSanitizer;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,13 +47,13 @@ public class SendBiologicalObjectToQueueUseCase implements SendBiologicalObjectT
         Optional<String> effectiveNameOpt = BiologicalObjectNameResolver.resolveEffectiveName(biologicalObject);
         if (effectiveNameOpt.isEmpty()) {
             log.warn("Skipping queue dispatch for biologicalObject id={}: name and symbol are null or blank",
-                    biologicalObject.getId());
+                    LogSanitizer.sanitize(biologicalObject.getId()));
             return;
         }
 
         String effectiveName = effectiveNameOpt.get();
         if (isSavedName(effectiveName) || isSavedSynonyms(biologicalObject.getSynonyms())) {
-            log.info("Mesh tree for {} already exists", effectiveName);
+            log.info("Mesh tree for {} already exists", LogSanitizer.sanitize(effectiveName));
             return;
         }
 

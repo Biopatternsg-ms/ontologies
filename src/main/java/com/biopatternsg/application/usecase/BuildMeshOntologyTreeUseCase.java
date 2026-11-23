@@ -23,6 +23,7 @@ import com.biopatternsg.domain.model.mesh.MeshInfo;
 import com.biopatternsg.domain.model.mesh.SummaryMesh;
 import com.biopatternsg.domain.port.in.BuildMeshOntologyTree;
 import com.biopatternsg.domain.port.out.repositories.MeshOntologyRepository;
+import com.biopatternsg.shared.LogSanitizer;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,22 +56,23 @@ public class BuildMeshOntologyTreeUseCase implements BuildMeshOntologyTree {
         Optional<String> effectiveNameOpt = BiologicalObjectNameResolver.resolveEffectiveName(biologicalObject);
         if (effectiveNameOpt.isEmpty()) {
             log.warn("Skipping building tree mesh for biologicalObject id={}: name and symbol are null or blank",
-                    biologicalObject.getId());
+                    LogSanitizer.sanitize(biologicalObject.getId()));
             return;
         }
 
         String effectiveName = effectiveNameOpt.get();
+        String safeEffectiveName = LogSanitizer.sanitize(effectiveName);
         if (isSavedName(effectiveName)) {
-            log.info("Mesh tree for {} already exists, skipping external lookup", effectiveName);
+            log.info("Mesh tree for {} already exists, skipping external lookup", safeEffectiveName);
             return;
         }
 
-        log.info("Start building tree mesh: {}", effectiveName);
+        log.info("Start building tree mesh: {}", safeEffectiveName);
 
         List<String> meshTermIds = meshOntologyService.getMeshTermIds(effectiveName);
         Optional<MeshInfo> matchTermOptional = findFirstMatchTerm(meshTermIds, biologicalObject.getSynonyms(), effectiveName);
         if (matchTermOptional.isEmpty()) {
-            log.info("No match term found for {}", effectiveName);
+            log.info("No match term found for {}", safeEffectiveName);
             return;
         }
 
@@ -79,7 +81,7 @@ public class BuildMeshOntologyTreeUseCase implements BuildMeshOntologyTree {
         biologicalObjectsService.updateMeshId(biologicalObject.getId(), matchTerm.getMeshId());
         saveAncestorTree(matchTerm);
 
-        log.info("End building tree mesh: {}", effectiveName);
+        log.info("End building tree mesh: {}", safeEffectiveName);
     }
 
     private void saveAncestorTree(MeshInfo rootMatch) {
@@ -90,15 +92,16 @@ public class BuildMeshOntologyTreeUseCase implements BuildMeshOntologyTree {
 
         while (!termIdsQueue.isEmpty()) {
             String currentTermId = termIdsQueue.pop();
+            String safeTermId = LogSanitizer.sanitize(currentTermId);
             if (isSavedTerm(currentTermId)) {
-                log.info("Term {} already exists", currentTermId);
+                log.info("Term {} already exists", safeTermId);
                 continue;
             }
 
             SummaryMesh currentSummaryMesh = meshOntologyService.getSummarySynonyms(currentTermId);
             MeshInfo ancestorMeshInfo = buildAncestorMeshInfo(currentTermId, currentSummaryMesh);
             saveMeshTerm(ancestorMeshInfo);
-            log.info("Term {} saved", currentTermId);
+            log.info("Term {} saved", safeTermId);
 
             ancestorMeshInfo.getParents().forEach(termIdsQueue::push);
         }

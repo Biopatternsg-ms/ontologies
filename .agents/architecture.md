@@ -76,6 +76,7 @@
 ```text
 com.biopatternsg/
 ├── Main.java                                <-- Punto de entrada de la aplicación Quarkus (@QuarkusMain)
+├── shared/                                  <-- Utilidades transversales puras sin dependencias de frameworks (LogSanitizer)
 ├── domain/                                  <-- Capa de Dominio (Pura, sin dependencias de frameworks)
 │   ├── model/                               <-- Entidades y modelos del dominio
 │   │   ├── GeneOntologyBuildTreeRequest     <-- Solicitud para construir árbol de Gene Ontology
